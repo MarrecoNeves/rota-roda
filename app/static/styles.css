@@ -334,6 +334,7 @@ svg { flex: none; }
 .mk.dim { opacity: .25; }
 /* Leaflet (modo gratuito) */
 .leaflet-container { font-family: var(--font); background: #e5e9ef; }
+.leaflet-tile-pane { filter: saturate(.75) contrast(.95); }
 .lf-icon { background: none; border: 0; }
 .lf-icon .mk { position: absolute; left: 0; top: 0; transform: translate(-50%, calc(-100% - 4px)); }
 .lf-icon .mk:has(.mk-dep) { transform: translate(-50%, -50%); }

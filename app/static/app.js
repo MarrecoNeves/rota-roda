@@ -147,10 +147,10 @@ const LeafletView = {
     await loadScript("/static/vendor/leaflet/leaflet.js");
     this.map = L.map(el, { zoomControl: false, preferCanvas: false }).setView([-22.9035, -43.115], 13);
     L.control.zoom({ position: "topright" }).addTo(this.map);
-    // Mapa base gratuito (OpenStreetMap estilizado pela CARTO) — exige só a atribuição
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      maxZoom: 20, subdomains: "abcd",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    // Mapa base gratuito do OpenStreetMap (sem chave; exige só a atribuição)
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(this.map);
   },
   onClick(cb) { this.map.on("click", (e) => cb(e.latlng.lat, e.latlng.lng)); },
