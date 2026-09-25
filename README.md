@@ -41,6 +41,35 @@ O app usa as cores institucionais da UFF (Azul-UFF `#004f9f` e Cinza-UFF `#eaeae
 marca da universidade). O ícone é original, uma roda cujo raio vira uma rota, e **não** reproduz o logotipo
 oficial da UFF.
 
+## Recursos extras
+
+| Recurso | Serviço | Chave |
+|---|---|---|
+| Buscar por **CEP** (digite o CEP na busca ou use a coluna `cep` na planilha) | ViaCEP, com BrasilAPI como reserva | não |
+| **Clima** no horário de cada rota, com alerta de chuva | Open-Meteo | não |
+| Camada de **postos de combustível** no mapa | Overpass (OpenStreetMap) | não |
+| **Enviar a rota pelo WhatsApp** e **QR code** para abrir a navegação no celular | links do WhatsApp e do Google Maps; QR gerado no navegador | não |
+| **Comparação com otimizador comercial** (exato × Clarke & Wright × GraphHopper) | GraphHopper Route Optimization | `GRAPHHOPPER_API_KEY` (grátis) |
+| **Perfil caminhão** e **área atendida** em 10, 20 e 30 min (isócronas) | OpenRouteService | `ORS_API_KEY` (grátis) |
+| **Trânsito agora**: camada no mapa e tempo de cada rota com trânsito | TomTom | `TOMTOM_API_KEY` (grátis) |
+
+A busca de endereços, o CEP, o clima e os postos são consultados **direto pelo navegador**. Servidores gratuitos
+na nuvem costumam ser bloqueados pelos serviços públicos de endereço do OpenStreetMap, e foi isso que fez a busca
+"travar" na primeira versão publicada.
+
+### Como ativar as chaves grátis
+
+1. Crie uma conta gratuita em cada serviço e copie a chave:
+   - [GraphHopper](https://graphhopper.com/dashboard/);
+   - [OpenRouteService](https://openrouteservice.org/dev/#/signup);
+   - [TomTom](https://developer.tomtom.com/).
+2. No Render, abra o serviço **rota-roda-uff** → **Environment** → **Add Environment Variable** e cadastre
+   `GRAPHHOPPER_API_KEY`, `ORS_API_KEY` e `TOMTOM_API_KEY`. Salve, e o app reinicia sozinho.
+3. Sem as chaves, o app funciona normalmente e esses três recursos aparecem como "inativos".
+
+A comparação com o GraphHopper usa as rotas que ele devolve, mas recalcula o custo **com a mesma matriz de
+distâncias** do VRPSolverEasy. Assim a comparação é justa, e o valor exato nunca fica acima do comercial.
+
 ## Serviços usados (todos gratuitos por padrão)
 
 | Função | Modo gratuito (padrão) | Com Google (opcional) |
@@ -68,11 +97,12 @@ FastAPI (Python) ──► OSRM (grátis) ou Google Routes: matriz de distância
 
 ```
 app/
-  main.py        API (config, suggest, reverse, geocode, solve) + serve o front-end
+  main.py        API (config, solve, isócronas, trânsito) + serve o front-end
+  extras.py      GraphHopper, OpenRouteService e TomTom (opcionais, com chave grátis)
   solver.py      modelagem VRPSolverEasy, Clarke & Wright, avaliação de rotas
   geo.py         OpenStreetMap (Photon, Nominatim, OSRM) e Google, com fallbacks
-  static/        index.html, styles.css, app.js + vendor/ (Leaflet e SheetJS locais)
-tests/           21 testes (inclui conferência do ótimo por força bruta)
+  static/        index.html, styles.css, app.js, services.js + vendor/ (Leaflet, SheetJS e QR code locais)
+tests/           28 testes (inclui conferência do ótimo por força bruta)
 Dockerfile, render.yaml, requirements.txt
 ```
 
@@ -147,6 +177,7 @@ maiúsculas nem acentos.
 | `nome` | não | Loja Centro |
 | `inicio` / `fim` | não (ativam janelas de tempo) | 09:00 / 12:00 |
 | `servico` | não (minutos, padrão 5) | 10 |
+| `cep` / `numero` | não (substituem o endereço) | 24020-085 / 100 |
 
 ## Método
 
