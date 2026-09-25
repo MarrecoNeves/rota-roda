@@ -10,7 +10,7 @@ const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" 
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 // Paleta de rotas: 10 cores distinguíveis, com contraste para texto branco
-const COLORS = ["#2563eb", "#dc2626", "#059669", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#4d7c0f", "#b45309", "#475569"];
+const COLORS = ["#004f9f", "#dc2626", "#059669", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#4d7c0f", "#b45309", "#475569"];
 const colorOf = (i) => COLORS[i % COLORS.length];
 
 const HOUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 11h3v9h5v-6h4v6h5v-9h3z"/></svg>';
@@ -1198,6 +1198,7 @@ async function exportExcel() {
     const start = toMin(res.opts.dayStart);
     const resumo = [
       ["Rota Roda — Roteirizador VRP (UFF)"],
+      ["Desenvolvido por Daniel Neves, Juan Souza, Pedro Souza e Pedro Jensen"],
       [],
       ["Status", STATUS_UI[res.exact.status]?.[2] || res.exact.status],
       ["Custo total (R$)", res.exact.cost],
