@@ -35,7 +35,7 @@ O Google Maps é opcional.
 
 | Função | Modo gratuito (padrão) | Com Google (opcional) |
 |---|---|---|
-| Mapa | Leaflet + OpenStreetMap (estilo CARTO Voyager) | Google Maps JavaScript API |
+| Mapa | Leaflet + OpenStreetMap | Google Maps JavaScript API |
 | Sugestões de endereço | Photon (OpenStreetMap) | Places API (New) |
 | Endereço → coordenada | Nominatim (OpenStreetMap) | Geocoding API |
 | Distâncias, tempos e traçado das rotas | OSRM (OpenStreetMap) | Routes API |
