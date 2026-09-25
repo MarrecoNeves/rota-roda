@@ -12,13 +12,13 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 from fastapi import FastAPI, HTTPException, Request  # noqa: E402
-from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
+from fastapi.responses import FileResponse, JSONResponse, Response  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
 
-from . import geo  # noqa: E402
-from .solver import (Options, Point, ProblemError, VehicleType,  # noqa: E402
-                     solve)
+from . import extras, geo  # noqa: E402
+from .solver import (Options, Point, ProblemError, Route, VehicleType,  # noqa: E402
+                     _finish_route, evaluate_route, solve)
 
 STATIC = Path(__file__).resolve().parent / "static"
 MAX_POINTS = int(os.getenv("MAX_POINTS", "80"))
@@ -75,6 +75,9 @@ class OptionsIn(BaseModel):
     use_time_windows: bool = False
     time_limit: float = Field(30, gt=0)
     horizon_min: float = Field(600, gt=0)
+    vehicle_profile: str = "car"        # "car" | "truck" (caminhao exige OpenRouteService)
+    compare_commercial: bool = True     # comparar com GraphHopper (se houver chave)
+    traffic: bool = True                # tempo com transito agora (se houver chave TomTom)
 
 
 class SolveIn(BaseModel):
@@ -100,6 +103,7 @@ def config():
         "map_provider": "google" if os.getenv("GOOGLE_MAPS_BROWSER_KEY", "").strip() else "osm",
         "server_key": bool(geo.GOOGLE_KEY),
         "max_points": MAX_POINTS,
+        "features": extras.features(),
     }
 
 
@@ -163,7 +167,20 @@ def solve_endpoint(body: SolveIn, request: Request):
                   min(o.time_limit, MAX_TIME_LIMIT), o.horizon_min)
 
     t0 = time.perf_counter()
-    matrix = geo.distance_matrix([(p.lat, p.lng) for p in points])
+    coords_all = [(p.lat, p.lng) for p in points]
+    truck = o.vehicle_profile == "truck" and extras.features()["ors"]
+    notes = []
+    matrix = None
+    if truck:
+        try:
+            d, tm = extras.ors_matrix(coords_all, "driving-hgv")
+            matrix = geo.Matrix(d, tm, "ors-hgv")
+        except Exception as e:  # noqa: BLE001
+            notes.append("Perfil caminhão indisponível agora (OpenRouteService não respondeu); as rotas usaram o perfil carro."
+                         + (f" Detalhe: {e}" if isinstance(e, extras.ExtraError) else ""))
+            truck = False
+    if matrix is None:
+        matrix = geo.distance_matrix(coords_all)
     t_matrix = time.perf_counter() - t0
 
     try:
@@ -177,7 +194,18 @@ def solve_endpoint(body: SolveIn, request: Request):
         seq = [r.depot] + r.stops + ([r.depot] if opt.return_to_depot else [])
         coords = [(points[i].lat, points[i].lng) for i in seq]
         rj = _route_json(r, vtypes)
-        rj["polylines"] = geo.route_geometry(coords, matrix.source)
+        if truck:
+            try:
+                rj["polylines"] = [extras.ors_polyline(coords, "driving-hgv")]
+            except Exception:  # noqa: BLE001
+                rj["polylines"] = geo.route_geometry(coords, "osrm")
+        else:
+            rj["polylines"] = geo.route_geometry(coords, matrix.source)
+        if o.traffic and extras.features()["tomtom"] and len(coords) >= 2:
+            try:
+                rj["traffic"] = extras.tomtom_route_times(coords)
+            except Exception:  # noqa: BLE001
+                rj["traffic"] = {"error": "TomTom indisponível agora."}
         routes.append(rj)
     heur_routes = []
     for r in heur["routes"]:
@@ -187,7 +215,28 @@ def solve_endpoint(body: SolveIn, request: Request):
     if exact["cost"] and heur["feasible"]:
         gap = round((heur["cost"] - exact["cost"]) / exact["cost"] * 100, 2)
 
+    commercial = None
+    if o.compare_commercial and extras.features()["graphhopper"]:
+        t1 = time.perf_counter()
+        try:
+            gh = extras.graphhopper_vrp(points, vtypes, opt, "truck" if truck else "car")
+            gh_routes = [_finish_route(Route(g["vehicle_type"], g["depot"], g["stops"]),
+                                       points, matrix.dist_km, matrix.time_min, vtypes, opt) for g in gh]
+            feasible = all(evaluate_route(r.stops, r.depot, points, matrix.dist_km, matrix.time_min, opt)[3]
+                           for r in gh_routes)
+            cost = round(sum(r.cost for r in gh_routes), 4)
+            commercial = {"name": "GraphHopper", "cost": cost, "feasible": feasible,
+                          "time_s": round(time.perf_counter() - t1, 2),
+                          "gap_pct": round((cost - exact["cost"]) / exact["cost"] * 100, 2) if exact["cost"] else None,
+                          "routes": [_route_json(r, vtypes) for r in gh_routes]}
+        except Exception as e:  # noqa: BLE001
+            commercial = {"name": "GraphHopper", "error": str(e) if isinstance(e, extras.ExtraError)
+                          else "serviço indisponível agora (tente recalcular em instantes)."}
+
     return {
+        "notes": notes,
+        "profile": "truck" if truck else "car",
+        "commercial": commercial,
         "matrix": {"source": matrix.source, "time_s": round(t_matrix, 2)},
         "exact": {k: exact[k] for k in ("cost", "status", "status_code", "message", "stats", "time_s")}
         | {"routes": routes},
@@ -202,6 +251,40 @@ def solve_endpoint(body: SolveIn, request: Request):
             "capacity_used": sum(r["capacity"] for r in routes),
         },
     }
+
+
+# --------------------------------------------------------------------------- #
+# Extras com chave gratuita (OpenRouteService / TomTom)
+# --------------------------------------------------------------------------- #
+class IsoIn(BaseModel):
+    lat: float
+    lng: float
+    minutes: list[int] = [10, 20, 30]
+    profile: str = "driving-car"
+
+
+@app.post("/api/isochrones")
+def isochrones(body: IsoIn, request: Request):
+    _rate_limit(request, "iso", limit=60)
+    mins = [m for m in body.minutes if 1 <= m <= 60][:3] or [10, 20, 30]
+    prof = body.profile if body.profile in ("driving-car", "driving-hgv") else "driving-car"
+    try:
+        return extras.ors_isochrones(body.lat, body.lng, mins, prof)
+    except extras.ExtraError as e:
+        return JSONResponse({"error": str(e)}, status_code=503)
+    except Exception:  # noqa: BLE001
+        return JSONResponse({"error": "OpenRouteService indisponível agora. Tente de novo em instantes."}, status_code=503)
+
+
+@app.get("/api/traffic/{z}/{x}/{y}.png")
+def traffic_tile(z: int, x: int, y: int):
+    if not (0 <= z <= 22):
+        raise HTTPException(400, "zoom inválido")
+    try:
+        png = extras.tomtom_tile(z, x, y)
+    except Exception as e:  # noqa: BLE001
+        return JSONResponse({"error": str(e) if isinstance(e, extras.ExtraError) else "TomTom indisponível agora."}, status_code=503)
+    return Response(png, media_type="image/png", headers={"Cache-Control": "public, max-age=120"})
 
 
 # --------------------------------------------------------------------------- #
