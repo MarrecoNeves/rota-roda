@@ -1,0 +1,20 @@
+# Mantem o Rota Roda "acordado" no plano gratis do Render.
+# O Render desliga o app apos 15 min sem visitas; este robo do GitHub (gratis em
+# repositorios publicos) visita o app a cada 10 min, entao o link abre na hora.
+# Um app ligado 24h consome ~744 h/mes, dentro das 750 h gratis do Render.
+name: Manter o app acordado
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Visitar o app
+        run: |
+          curl -fsS --max-time 90 https://rota-roda-uff.onrender.com/api/health \
+            && echo " - app acordado" || echo "app nao respondeu (tentara de novo em 10 min)"
