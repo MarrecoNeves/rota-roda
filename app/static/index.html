@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rota Roda · Roteirização ótima de veículos</title>
+  <meta name="description" content="Rota Roda: roteirização de veículos com VRPSolverEasy e Google Maps — Tópicos Especiais em Engenharia de Produção, UFF.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231d4ed8'/%3E%3Cpath d='M9 22c0-5 14-3 14-9' stroke='white' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='9' cy='22' r='3' fill='white'/%3E%3Ccircle cx='23' cy='11' r='3' fill='white'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#painel">Pular para o painel</a>
+
+  <div class="app">
+    <aside class="panel" id="painel" aria-label="Painel de roteirização">
+      <header class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="36" height="36"><rect width="32" height="32" rx="9" fill="currentColor"/><path d="M9 22c0-5 14-3 14-9" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="9" cy="22" r="3" fill="#fff"/><circle cx="23" cy="11" r="3" fill="#fff"/></svg>
+        </div>
+        <div>
+          <h1>Rota Roda</h1>
+          <p class="brand-sub">Roteirizador VRP · Tópicos Especiais em EP · UFF</p>
+        </div>
+      </header>
+
+      <nav class="stepper" aria-label="Etapas">
+        <ol>
+          <li><button type="button" class="step" data-step="1" aria-current="step"><span class="step-n">1</span><span class="step-l">Pontos</span></button></li>
+          <li><button type="button" class="step" data-step="2"><span class="step-n">2</span><span class="step-l">Frota</span></button></li>
+          <li><button type="button" class="step" data-step="3"><span class="step-n">3</span><span class="step-l">Rotas</span></button></li>
+        </ol>
+      </nav>
+
+      <main class="panel-body">
+        <!-- ============ ETAPA 1: PONTOS ============ -->
+        <section class="stage" id="stage-1" aria-labelledby="t1">
+          <h2 id="t1" class="stage-title">Depósito e clientes</h2>
+          <p class="stage-lead">Busque o endereço e escolha na lista, ou clique direto no mapa. O primeiro ponto vira o depósito.</p>
+
+          <div class="search" role="combobox" aria-haspopup="listbox" aria-owns="sugestoes" aria-expanded="false" id="search-box">
+            <label for="busca" class="sr-only">Buscar endereço</label>
+            <svg class="search-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="busca" type="text" autocomplete="off" placeholder="Rua, número, bairro, cidade" aria-autocomplete="list" aria-controls="sugestoes">
+            <ul id="sugestoes" class="suggestions" role="listbox" hidden></ul>
+          </div>
+
+          <div class="toolbar">
+            <button type="button" class="btn btn-ghost" id="btn-exemplo">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+              Exemplo Niterói
+            </button>
+            <button type="button" class="btn btn-ghost" id="btn-importar" title="Importar planilha .xlsx ou .csv">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/></svg>
+              Importar
+            </button>
+            <a class="btn btn-ghost" href="/static/modelo_pontos.xlsx" download title="Baixar planilha-modelo">Modelo .xlsx</a>
+            <input type="file" id="arquivo" accept=".xlsx,.xls,.csv" hidden>
+          </div>
+
+          <details class="tw-box" id="tw-box">
+            <summary>
+              <span class="switch-row">
+                <span>
+                  <strong>Janelas de tempo</strong>
+                  <span class="muted small">Horário permitido para atender cada cliente</span>
+                </span>
+              </span>
+            </summary>
+            <div class="tw-body">
+              <label class="switch"><input type="checkbox" id="usar-tw"><span class="switch-ui" aria-hidden="true"></span><span>Usar janelas de tempo</span></label>
+              <div class="grid-2">
+                <div class="field"><label for="jornada-ini">Saída do depósito</label><input type="time" id="jornada-ini" value="08:00"></div>
+                <div class="field"><label for="jornada-fim">Fim da jornada</label><input type="time" id="jornada-fim" value="18:00"></div>
+              </div>
+            </div>
+          </details>
+
+          <div class="list-head">
+            <h3 class="list-title">Pontos <span class="count" id="count-pontos">0</span></h3>
+            <span class="list-meta"><span class="muted small" id="resumo-demanda"></span>
+            <button type="button" class="btn btn-ghost btn-sm btn-danger-text" id="btn-limpar" hidden>Limpar</button></span>
+          </div>
+          <ol class="points" id="lista-pontos" aria-live="polite"></ol>
+          <div class="empty" id="vazio-pontos">
+            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 43s-13-10.4-13-20.5a13 13 0 0 1 26 0C37 32.6 24 43 24 43z"/><circle cx="24" cy="22.5" r="4.5"/></svg>
+            <p><strong>Nenhum ponto ainda.</strong><br>Busque um endereço acima, clique no mapa ou carregue o exemplo de Niterói.</p>
+          </div>
+        </section>
+
+        <!-- ============ ETAPA 2: FROTA ============ -->
+        <section class="stage" id="stage-2" aria-labelledby="t2" hidden>
+          <h2 id="t2" class="stage-title">Frota disponível</h2>
+          <p class="stage-lead">Cadastre os tipos de veículo. O solver escolhe quais usar e quantos.</p>
+
+          <div class="capacity" id="capacidade" aria-live="polite"></div>
+
+          <ol class="fleet" id="lista-frota"></ol>
+          <div class="toolbar">
+            <button type="button" class="btn btn-ghost" id="btn-add-veiculo">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              Adicionar tipo de veículo
+            </button>
+          </div>
+
+          <h3 class="list-title spaced">Opções</h3>
+          <div class="options">
+            <label class="switch"><input type="checkbox" id="retorna" checked><span class="switch-ui" aria-hidden="true"></span><span>Veículos retornam ao depósito</span></label>
+            <div class="field inline">
+              <label for="tempo-limite">Tempo máximo do solver</label>
+              <div class="input-suffix"><input type="number" id="tempo-limite" min="5" max="120" step="5" value="30" inputmode="numeric"><span>s</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ ETAPA 3: RESULTADO ============ -->
+        <section class="stage" id="stage-3" aria-labelledby="t3" hidden>
+          <h2 id="t3" class="stage-title">Rotas otimizadas</h2>
+          <div id="resultado" aria-live="polite"></div>
+        </section>
+      </main>
+
+      <footer class="panel-foot">
+        <p class="foot-msg" id="foot-msg" role="status"></p>
+        <div class="foot-actions">
+          <button type="button" class="btn btn-secondary" id="btn-voltar" hidden>Voltar</button>
+          <button type="button" class="btn btn-primary" id="btn-avancar">Próximo: frota</button>
+        </div>
+      </footer>
+    </aside>
+
+    <section class="map-wrap" aria-label="Mapa">
+      <div id="map" class="map"></div>
+      <div class="map-empty" id="map-empty" hidden>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 12l12-5 12 5 12-5v29l-12 5-12-5-12 5z"/><path d="M18 7v29M30 12v29"/></svg>
+        <p><strong>Mapa indisponível</strong><br><span id="map-empty-msg">Verifique a conexão com a internet. O cálculo das rotas funciona mesmo assim.</span></p>
+      </div>
+      <div class="map-legend" id="legenda" hidden></div>
+      <div class="map-hint" id="map-hint">Clique no mapa para adicionar um ponto · arraste um marcador para ajustar</div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="alert" hidden></div>
+
+  <div class="overlay" id="overlay" hidden>
+    <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="ov-title">
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="ov-title"><strong>Calculando rotas</strong></p>
+      <ol class="ov-steps" id="ov-steps">
+        <li data-k="matriz">Matriz de distâncias pelas ruas</li>
+        <li data-k="heur">Heurística de Clarke &amp; Wright</li>
+        <li data-k="exato">Branch-cut-and-price (VRPSolverEasy)</li>
+      </ol>
+    </div>
+  </div>
+
+  <script src="/static/app.js" type="module"></script>
+</body>
+</html>
