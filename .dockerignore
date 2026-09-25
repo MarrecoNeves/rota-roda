@@ -1,0 +1,9 @@
+.env
+.git
+__pycache__
+*.pyc
+tests
+.pytest_cache
+BaPTree.dot
+iniciar_log.txt
+.venv

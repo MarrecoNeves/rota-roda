@@ -1,0 +1,7 @@
+# VRPSolverEasy 0.1.3 e a ultima versao que traz o solver (BaPCod + CLP) compilado.
+# A 0.1.4 exige baixar o BaPCod separadamente - nao atualize sem testar.
+VRPSolverEasy==0.1.3
+fastapi==0.115.6
+uvicorn==0.34.0
+httpx==0.28.1
+python-dotenv==1.0.1

@@ -1,0 +1,10 @@
+# Blueprint do Render (plano Free, sem cartão): New + > Blueprint > selecione este repositório.
+# Não precisa de nenhuma chave: o app usa OpenStreetMap por padrão.
+# Opcional: para usar o Google Maps, cadastre GOOGLE_MAPS_BROWSER_KEY e GOOGLE_MAPS_SERVER_KEY
+# em Environment no painel do serviço.
+services:
+  - type: web
+    name: rota-roda-uff
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
