@@ -325,7 +325,8 @@ svg { flex: none; }
 .map-empty p { max-width: 46ch; margin: 0 auto; }
 .map-empty strong { color: var(--ink-2); font-size: var(--fs-lg); }
 .map-hint { position: absolute; left: 50%; transform: translateX(-50%); bottom: 24px; background: rgba(15, 23, 42, .86); color: #fff; font-size: var(--fs-sm); padding: var(--s2) var(--s4); border-radius: var(--r-pill); pointer-events: none; box-shadow: var(--shadow-2); white-space: nowrap; }
-.map-legend { position: absolute; top: 12px; left: 12px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-2); padding: var(--s2) var(--s3); display: grid; gap: 2px; font-size: var(--fs-sm); max-width: 260px; }
+.map-side { position: absolute; top: 12px; left: 12px; display: grid; gap: var(--s2); z-index: 500; max-width: 270px; }
+.map-legend { position: relative; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-2); padding: var(--s2) var(--s3); display: grid; gap: 2px; font-size: var(--fs-sm); max-width: 260px; }
 .map-legend button { display: flex; align-items: center; gap: var(--s2); border: 0; background: none; padding: 4px 6px; border-radius: 6px; cursor: pointer; text-align: left; min-height: 32px; }
 .map-legend button:hover { background: var(--surface-2); }
 .map-legend button[aria-pressed="false"] { opacity: .4; }
@@ -373,3 +374,40 @@ svg { flex: none; }
   .panel-body { overflow: visible; }
   .route details { display: block; }
 }
+
+/* ---- novidades: nova roteirização, camadas, clima, trânsito, QR ---- */
+.brand .btn-new { margin-left: auto; }
+.btn-new { background: var(--brand-soft); color: var(--brand); border: 1px solid #b9cfe8; }
+.btn-new:hover { background: #d6e5f5; }
+.btn-new svg { width: 16px; height: 16px; }
+.btn-outline-danger { background: var(--surface); color: var(--danger); border: 1px solid #f0b8b3; }
+.btn-outline-danger:hover { background: var(--danger-soft); }
+.btn.armed { background: var(--danger); color: #fff; border-color: var(--danger); }
+.select-sm { height: 40px; border: 1px solid var(--line-strong); border-radius: var(--r-sm); padding: 0 var(--s2); background: var(--surface); max-width: 220px; }
+.hint { font-size: var(--fs-xs); color: var(--ink-3); margin: -4px 0 var(--s2); }
+.map-layers { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-2); padding: var(--s2) var(--s3); display: grid; gap: 2px; font-size: var(--fs-sm); }
+.layers-t { font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); margin: 2px 6px 4px; }
+.map-layers button { border: 0; background: none; text-align: left; padding: 6px 8px; border-radius: 6px; cursor: pointer; min-height: 32px; }
+.map-layers button:hover:not(:disabled) { background: var(--surface-2); }
+.map-layers button[aria-pressed="true"] { background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+.map-layers button:disabled { opacity: .45; cursor: not-allowed; }
+.map-layers button[aria-busy="true"] { opacity: .6; cursor: progress; }
+.mk-poi { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 2px solid #b45309; display: grid; place-items: center; font-size: 13px; box-shadow: 0 2px 5px rgba(15, 23, 42, .3); transform: translate(-50%, -50%); }
+.lf-icon .mk-poi { position: absolute; left: 0; top: 0; }
+.cmp-row.c .bar > span { background: #b45309; }
+.note { font-size: var(--fs-sm); color: var(--warn); background: var(--warn-soft); padding: var(--s2) var(--s3); border-radius: var(--r-sm); margin-top: var(--s2); }
+.weather { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s3) var(--s4); margin-top: var(--s2); display: grid; gap: 2px; font-size: var(--fs-sm); }
+.wx { color: var(--ink-2); }
+.wx.rain { color: var(--warn); font-weight: 600; }
+.traffic { padding: 0 var(--s4) var(--s2) var(--s5); font-size: var(--fs-sm); color: var(--ink-2); }
+.traffic .delay { color: var(--danger); font-weight: 600; }
+.svc { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 4px; }
+.svc i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); margin-right: 8px; }
+.svc i.on { background: var(--ok); }
+.qr-dialog { border: 0; border-radius: var(--r-lg); padding: var(--s6); box-shadow: var(--shadow-2); max-width: 340px; width: calc(100% - 32px); }
+.qr-dialog::backdrop { background: rgba(15, 23, 42, .45); }
+.qr-dialog h2 { font-size: var(--fs-lg); }
+.qr-box { width: 240px; height: 240px; margin: var(--s4) auto; }
+.qr-box svg { width: 100%; height: 100%; }
+.qr-actions { display: flex; justify-content: space-between; gap: var(--s2); }
+@media (max-width: 900px) { .map-side { max-width: 200px; } .map-layers { font-size: var(--fs-xs); } }

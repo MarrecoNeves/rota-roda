@@ -2,6 +2,8 @@
    Rota Roda — front-end (OpenStreetMap ou Google Maps + API FastAPI/VRPSolverEasy)
    ========================================================================== */
 
+import { OSM, isCEP, lookupCEP, cepAddress, forecast, summarizeWeather, weatherInfo, fuelStations, whatsappLink, qrSvg } from "./services.js";
+
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -16,6 +18,9 @@ const colorOf = (i) => COLORS[i % COLORS.length];
 const HOUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 11h3v9h5v-6h4v6h5v-9h3z"/></svg>';
 const TRASH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
 const TRUCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>';
+const PLUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+const WHATS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 9.5c.3 2 2.2 4.1 4.5 4.8l1.2-1.1 1.8.8-.4 1.6c-3.6.4-7.6-3.4-7.3-7l1.6-.4.8 1.8z"/></svg>';
+const QRICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>';
 const PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
 
 /* --------------------------------------------------------------------------
@@ -26,9 +31,9 @@ const state = {
   step: 1,
   points: [],   // {id,name,address,lat,lng,demand,isDepot,service,twStart,twEnd}
   fleet: [],    // {id,name,capacity,qty,costKm,fixedCost,depotId}
-  opts: { returnToDepot: true, useTW: false, dayStart: "08:00", dayEnd: "18:00", timeLimit: 30 },
+  opts: { returnToDepot: true, useTW: false, dayStart: "08:00", dayEnd: "18:00", timeLimit: 30, profile: "car" },
   result: null, // resposta da API + snapshot dos dados usados
-  config: { browser_key: "", map_id: "DEMO_MAP_ID", server_key: false, max_points: 80 },
+  config: { browser_key: "", map_id: "DEMO_MAP_ID", server_key: false, max_points: 80, features: { graphhopper: false, ors: false, tomtom: false } },
 };
 
 function save() {
@@ -76,12 +81,23 @@ function footMsg(msg, isErr = false) {
   f.classList.toggle("err", isErr);
 }
 
-async function api(path, body) {
-  const r = await fetch(path, {
-    method: body ? "POST" : "GET",
-    headers: body ? { "Content-Type": "application/json" } : {},
-    body: body ? JSON.stringify(body) : undefined,
-  });
+async function api(path, body, timeout = 60000) {
+  // Nunca deixa a tela presa: toda chamada tem tempo máximo
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeout);
+  let r;
+  try {
+    r = await fetch(path, {
+      method: body ? "POST" : "GET",
+      headers: body ? { "Content-Type": "application/json" } : {},
+      body: body ? JSON.stringify(body) : undefined,
+      signal: ctl.signal,
+    });
+  } catch (err) {
+    throw new Error(err.name === "AbortError"
+      ? "O servidor demorou demais para responder. Se o app estava parado, ele pode estar acordando: tente de novo em 1 minuto."
+      : "Sem conexão com o servidor. Verifique a internet e tente de novo.");
+  } finally { clearTimeout(timer); }
   let data = null;
   try { data = await r.json(); } catch { /* resposta sem JSON */ }
   if (!r.ok) {
@@ -185,6 +201,15 @@ const LeafletView = {
   },
   panTo(lat, lng) { this.map.panTo([lat, lng]); },
   center() { const c = this.map.getCenter(); return { lat: c.lat, lng: c.lng }; },
+  addTiles(url, attribution) {
+    const layer = L.tileLayer(url, { maxZoom: 19, opacity: 0.85, attribution }).addTo(this.map);
+    return { remove: () => layer.remove() };
+  },
+  addGeoJSON(geojson, styleFn) {
+    const layer = L.geoJSON(geojson, { style: styleFn, interactive: false }).addTo(this.map);
+    layer.bringToBack();
+    return { remove: () => layer.remove() };
+  },
 };
 
 function loadGoogle(key) {
@@ -244,6 +269,20 @@ const GoogleView = {
   },
   panTo(lat, lng) { this.map.panTo({ lat, lng }); },
   center() { const c = this.map.getCenter(); return c ? { lat: c.lat(), lng: c.lng() } : null; },
+  addTiles(url) {
+    const t = new google.maps.ImageMapType({
+      getTileUrl: (c, z) => url.replace("{z}", z).replace("{x}", c.x).replace("{y}", c.y),
+      tileSize: new google.maps.Size(256, 256), opacity: 0.85,
+    });
+    this.map.overlayMapTypes.push(t);
+    return { remove: () => { const a = this.map.overlayMapTypes; for (let i = a.getLength() - 1; i >= 0; i--) if (a.getAt(i) === t) a.removeAt(i); } };
+  },
+  addGeoJSON(geojson, styleFn) {
+    const d = new google.maps.Data({ map: this.map });
+    d.addGeoJson(geojson);
+    d.setStyle((f) => { const st = styleFn({ properties: { value: f.getProperty("value") } }); return { fillColor: st.fillColor, fillOpacity: st.fillOpacity, strokeColor: st.color, strokeWeight: st.weight, clickable: false, zIndex: 0 }; });
+    return { remove: () => d.setMap(null) };
+  },
 };
 
 function mapUnavailable(msg) {
@@ -260,6 +299,7 @@ async function startView(view, provider) {
   G.ok = true;
   view.onClick((lat, lng) => { if (state.step === 1) addFromMapClick(lat, lng); });
   $("#map-empty").hidden = true;
+  renderLayerControls();
 }
 
 async function initMap() {
@@ -293,10 +333,7 @@ async function reverseGeocode(lat, lng) {
       if (results?.[0]) return results[0].formatted_address;
     } catch { /* tenta pelo servidor */ }
   }
-  try {
-    const { address } = await api(`/api/reverse?lat=${lat}&lng=${lng}`);
-    return address;
-  } catch { return null; }
+  try { return await OSM.reverse(lat, lng); } catch { return null; }
 }
 
 async function addFromMapClick(lat, lng) {
@@ -416,6 +453,61 @@ function renderLegend() {
   lg.hidden = false;
 }
 
+/* ---- camadas extras do mapa: postos, trânsito e área atendida ---- */
+const LAYERS = { fuel: null, traffic: null, iso: null };
+function clearLayers() {
+  Object.keys(LAYERS).forEach((k) => { if (LAYERS[k]) { LAYERS[k].remove(); LAYERS[k] = null; } });
+  $$("#camadas button").forEach((b) => b.setAttribute("aria-pressed", "false"));
+}
+function renderLayerControls() {
+  const box = $("#camadas");
+  if (!G.ok) { box.hidden = true; return; }
+  const f = state.config.features;
+  box.innerHTML = `<p class="layers-t">Camadas</p>
+    <button type="button" data-layer="fuel" aria-pressed="${!!LAYERS.fuel}">⛽ Postos de combustível</button>
+    <button type="button" data-layer="iso" aria-pressed="${!!LAYERS.iso}" ${f.ors ? "" : 'disabled title="Ative com a chave grátis do OpenRouteService (veja o README)"'}>🕒 Área atendida (10/20/30 min)</button>
+    <button type="button" data-layer="traffic" aria-pressed="${!!LAYERS.traffic}" ${f.tomtom ? "" : 'disabled title="Ative com a chave grátis da TomTom (veja o README)"'}>🚦 Trânsito agora</button>`;
+  box.hidden = false;
+}
+async function toggleLayer(kind, btn) {
+  if (LAYERS[kind]) { LAYERS[kind].remove(); LAYERS[kind] = null; btn.setAttribute("aria-pressed", "false"); return; }
+  const pts = (state.step === 3 && state.result ? state.result.points : state.points);
+  btn.setAttribute("aria-busy", "true");
+  try {
+    if (kind === "fuel") {
+      if (!pts.length) throw new Error("Adicione pontos para buscar postos na região.");
+      const lats = pts.map((p) => p.lat), lngs = pts.map((p) => p.lng);
+      const pad = 0.01;
+      const list = await fuelStations([Math.min(...lats) - pad, Math.min(...lngs) - pad, Math.max(...lats) + pad, Math.max(...lngs) + pad]);
+      const handles = list.map((s) => {
+        const el = document.createElement("div");
+        el.className = "mk-poi";
+        el.textContent = "⛽";
+        return G.view.addMarker({ lat: s.lat, lng: s.lng, el, title: s.name, draggable: false, zIndex: 10,
+          popup: () => `<div class="iw"><strong>${esc(s.name)}</strong><span>${esc(s.brand || "Posto de combustível")}</span><span>Fonte: OpenStreetMap</span></div>` });
+      });
+      LAYERS.fuel = { remove: () => handles.forEach((h) => h.remove()) };
+      toast(list.length ? `${list.length} postos de combustível encontrados na região.` : "Nenhum posto encontrado na região.");
+    } else if (kind === "traffic") {
+      LAYERS.traffic = G.view.addTiles(`${location.origin}/api/traffic/{z}/{x}/{y}.png`, "Trânsito &copy; TomTom");
+    } else if (kind === "iso") {
+      const dep = pts.find((p) => p.isDepot);
+      if (!dep) throw new Error("Marque um depósito para ver a área atendida.");
+      const gj = await api("/api/isochrones", { lat: dep.lat, lng: dep.lng, minutes: [10, 20, 30], profile: state.opts.profile === "truck" ? "driving-hgv" : "driving-car" });
+      const col = { 600: "#004f9f", 1200: "#3b7fc4", 1800: "#9cc0e6" };
+      LAYERS.iso = G.view.addGeoJSON(gj, (f) => ({ color: col[f.properties.value] || "#004f9f", weight: 1.5, fillColor: col[f.properties.value] || "#004f9f", fillOpacity: 0.12 }));
+      toast("Área atendida a partir do depósito: 10, 20 e 30 minutos de carro.");
+    }
+    btn.setAttribute("aria-pressed", "true");
+  } catch (err) {
+    toast(err.message || "Camada indisponível agora.", true);
+  } finally { btn.removeAttribute("aria-busy"); }
+}
+$("#camadas").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-layer]");
+  if (b && !b.disabled) toggleLayer(b.dataset.layer, b);
+});
+
 function highlightPoint(id) {
   $$(".pt").forEach((el) => el.classList.toggle("hl", el.dataset.id === id));
   const el = $(`.pt[data-id="${id}"]`);
@@ -480,6 +572,7 @@ function renderPoints() {
   }).join("");
   $("#vazio-pontos").hidden = state.points.length > 0;
   $("#btn-limpar").hidden = state.points.length === 0;
+  $("#btn-nova").hidden = state.points.length === 0 && !state.result;
   $("#count-pontos").textContent = state.points.length;
   const d = depots().length, c = customers().length;
   $("#resumo-demanda").textContent = state.points.length ? `${d} depósito${d !== 1 ? "s" : ""} · ${c} cliente${c !== 1 ? "s" : ""} · demanda ${nf().format(totalDemand())}` : "";
@@ -537,13 +630,33 @@ $("#btn-limpar").addEventListener("click", () => {
   renderMap();
 });
 
+// Recomeçar do zero: limpa pontos, frota e resultado
+function novaRoteirizacao(btn) {
+  if (state.points.length && !confirmInline(btn, "Clique de novo para confirmar")) return;
+  state.points = [];
+  state.fleet = [];
+  state.result = null;
+  G.hidden.clear();
+  clearLayers();
+  inputBusca.value = "";
+  closeSug();
+  save();
+  renderPoints();
+  goto(1);
+  renderMap();
+  inputBusca.focus();
+  toast("Pronto! Comece uma nova roteirização buscando o primeiro endereço.");
+}
+$("#btn-nova").addEventListener("click", (e) => novaRoteirizacao(e.currentTarget));
+
 // Confirmação em dois cliques (sem diálogos nativos)
 function confirmInline(btn, label) {
-  if (btn.dataset.armed) { delete btn.dataset.armed; btn.textContent = btn.dataset.orig; return true; }
-  btn.dataset.orig = btn.textContent;
+  if (btn.dataset.armed) { delete btn.dataset.armed; btn.innerHTML = btn.dataset.orig; btn.classList.remove("armed"); return true; }
+  btn.dataset.orig = btn.innerHTML;
   btn.dataset.armed = "1";
   btn.textContent = label;
-  setTimeout(() => { if (btn.dataset.armed) { delete btn.dataset.armed; btn.textContent = btn.dataset.orig; } }, 3000);
+  btn.classList.add("armed");
+  setTimeout(() => { if (btn.dataset.armed) { delete btn.dataset.armed; btn.innerHTML = btn.dataset.orig; btn.classList.remove("armed"); } }, 3500);
   return false;
 }
 
@@ -571,6 +684,16 @@ function renderSug() {
 async function fetchSuggestions(q) {
   const my = ++search.seq;
   try {
+    if (isCEP(q)) {
+      // CEP digitado: ViaCEP/BrasilAPI preenchem rua, bairro e cidade
+      const c = await lookupCEP(q);
+      if (my !== search.seq) return;
+      search.items = c?.city ? [{ sel: true, cep: c, main: c.street || `CEP ${c.cep}`, sec: `${[c.district, c.city].filter(Boolean).join(", ")} - ${c.uf} · CEP ${c.cep.replace(/(\d{5})(\d{3})/, "$1-$2")}` }]
+        : [{ note: "CEP não encontrado." }];
+      search.active = search.items[0]?.sel ? 0 : -1;
+      renderSug();
+      return;
+    }
     if (G.provider === "google") {
       if (!G.placesLib) G.placesLib = await google.maps.importLibrary("places");
       const { AutocompleteSessionToken, AutocompleteSuggestion } = G.placesLib;
@@ -585,11 +708,8 @@ async function fetchSuggestions(q) {
         return { sel: true, main: pp.mainText?.toString() || pp.text.toString(), sec: pp.secondaryText?.toString() || "", pred: pp };
       });
     } else {
-      // Modo gratuito: sugestões do OpenStreetMap (Photon) via servidor, priorizando a região visível
-      const c = G.ok ? G.view.center() : null;
-      const qs = new URLSearchParams({ q });
-      if (c) { qs.set("lat", c.lat.toFixed(4)); qs.set("lng", c.lng.toFixed(4)); }
-      const { items } = await api(`/api/suggest?${qs}`);
+      // Modo gratuito: sugestões do OpenStreetMap (Photon) direto do navegador, priorizando a região visível
+      const items = await OSM.suggest(q, G.ok ? G.view.center() : null);
       if (my !== search.seq) return;
       search.items = items.map((it) => ({ sel: true, ...it }));
     }
@@ -609,6 +729,7 @@ async function pickSuggestion(s) {
   closeSug();
   inputBusca.value = "";
   try {
+    if (s.cep) { await addFromCEP(s.cep); return; }
     if (s.pred) {
       const place = s.pred.toPlace();
       await place.fetchFields({ fields: ["location", "formattedAddress", "displayName"] });
@@ -623,17 +744,50 @@ async function pickSuggestion(s) {
   }
 }
 
+// Geocodifica um endereço digitado: Google (se houver chave no servidor) ou OpenStreetMap pelo navegador
+async function geocodeOne(text) {
+  if (state.config.server_key) {
+    const { results } = await api("/api/geocode", { addresses: [text] });
+    const r = results[0].result;
+    return r ? { address: r.formatted, lat: r.lat, lng: r.lng } : null;
+  }
+  return OSM.search(text);
+}
+
+async function geocodeMany(texts, label = "Localizando endereços") {
+  if (state.config.server_key) {
+    const { results } = await api("/api/geocode", { addresses: texts });
+    return results.map((r) => (r.result ? { address: r.result.formatted, lat: r.result.lat, lng: r.result.lng } : null));
+  }
+  return OSM.batch(texts, label ? (i, n) => footMsg(`${label}… ${i + 1} de ${n}`) : null);
+}
+
+async function addFromCEP(c, number = "") {
+  footMsg("Localizando o CEP…");
+  try {
+    let hit = c.lat && c.lng ? { lat: c.lat, lng: c.lng } : null;
+    if (!hit) hit = await geocodeOne(cepAddress(c, number)) || await geocodeOne(`${c.street || ""}, ${c.city} - ${c.uf}`);
+    if (!hit) throw new Error("Não consegui localizar esse CEP no mapa.");
+    inputBusca.value = "";
+    closeSug();
+    addPoint({ name: c.street || `CEP ${c.cep}`, address: `${cepAddress(c, number)} · CEP ${c.cep.replace(/(\d{5})(\d{3})/, "$1-$2")}`, lat: hit.lat, lng: hit.lng });
+    if (!number) toast("Ponto pelo CEP (sem número). Arraste o marcador no mapa se precisar ajustar.");
+  } catch (err) {
+    toast(err.message, true);
+  } finally { updateFooter(); }
+}
+
 async function geocodeViaServer(text) {
   footMsg("Localizando endereço…");
   try {
-    const { results } = await api("/api/geocode", { addresses: [text] });
-    const r = results[0].result;
+    if (isCEP(text)) { await addFromCEP(await lookupCEP(text)); return; }
+    const r = await geocodeOne(text);
     if (!r) throw new Error("Endereço não encontrado. Inclua número, bairro e cidade.");
     inputBusca.value = "";
     closeSug();
-    addPoint({ address: r.formatted, lat: r.lat, lng: r.lng, name: shortName(text) });
+    addPoint({ address: r.address, lat: r.lat, lng: r.lng, name: shortName(text) });
   } catch (err) {
-    toast(err.message, true);
+    toast(err.message || "Não foi possível localizar o endereço.", true);
   } finally { updateFooter(); }
 }
 
@@ -693,10 +847,10 @@ $("#btn-exemplo").addEventListener("click", async () => {
 async function refineExample(ids) {
   const pts = ids.map((id) => state.points.find((p) => p.id === id)).filter(Boolean);
   try {
-    const { results } = await api("/api/geocode", { addresses: pts.map((p) => p.address) });
+    const results = await geocodeMany(pts.map((p) => p.address), null);
     let n = 0;
-    results.forEach((r, i) => {
-      const p = pts[i], g = r.result;
+    results.forEach((g, i) => {
+      const p = pts[i];
       if (!g || !state.points.includes(p) || state.step !== 1) return;
       const dkm = Math.hypot(g.lat - p.lat, (g.lng - p.lng) * Math.cos((p.lat * Math.PI) / 180)) * 111;
       if (dkm < 2 && dkm > 0.01) { Object.assign(p, { lat: g.lat, lng: g.lng }); n++; }
@@ -753,15 +907,19 @@ $("#arquivo").addEventListener("change", async (e) => {
       twStart: asTime(pickCol(r, ["inicio", "abre", "janelainicio", "twstart"])),
       twEnd: asTime(pickCol(r, ["fim", "fecha", "janelafim", "twend"])),
       service: Number(pickCol(r, ["servico", "atendimento", "tempoatendimento", "service"]) || 5),
-    })).filter((x) => x.address || (x.lat && x.lng));
-    if (!items.length) throw new Error("Não achei a coluna 'endereco' (ou 'lat'/'lng') na planilha.");
+      cep: String(pickCol(r, ["cep"]) ?? "").trim(),
+      number: String(pickCol(r, ["numero", "num", "n"]) ?? "").trim(),
+    })).filter((x) => x.address || x.cep || (x.lat && x.lng));
+    if (!items.length) throw new Error("Não achei a coluna 'endereco' (ou 'cep', ou 'lat'/'lng') na planilha.");
     if (items.length > state.config.max_points) throw new Error(`A planilha tem ${items.length} pontos; o limite é ${state.config.max_points}.`);
     if (!items.some((x) => x.isDepot)) items[0].isDepot = true;
-    const need = items.filter((x) => !(x.lat && x.lng));
+    for (const x of items.filter((x) => !x.address && x.cep && !(x.lat && x.lng))) {
+      try { const c = await lookupCEP(x.cep); x.address = cepAddress(c, x.number || ""); } catch { /* segue sem */ }
+    }
+    const need = items.filter((x) => !(x.lat && x.lng) && x.address);
     if (need.length) {
-      footMsg(`Geocodificando ${need.length} endereço(s)…`);
-      const { results } = await api("/api/geocode", { addresses: need.map((x) => x.address) });
-      results.forEach((r, i) => { if (r.result) Object.assign(need[i], { lat: r.result.lat, lng: r.result.lng, formatted: r.result.formatted }); });
+      const results = await geocodeMany(need.map((x) => x.address), "Localizando endereços da planilha");
+      results.forEach((r, i) => { if (r) Object.assign(need[i], { lat: r.lat, lng: r.lng, formatted: r.address }); });
     }
     const ok = items.filter((x) => x.lat && x.lng);
     const fail = items.length - ok.length;
@@ -883,6 +1041,7 @@ $("#btn-add-veiculo").addEventListener("click", () => {
   $(`#v-${state.fleet.at(-1).id}-nome`)?.focus();
 });
 $("#retorna").addEventListener("change", (e) => { state.opts.returnToDepot = e.target.checked; changed(); });
+$("#perfil").addEventListener("change", (e) => { state.opts.profile = e.target.value; changed(); });
 $("#tempo-limite").addEventListener("change", (e) => { state.opts.timeLimit = Math.min(120, Math.max(5, Number(e.target.value) || 30)); e.target.value = state.opts.timeLimit; changed(); });
 
 /* --------------------------------------------------------------------------
@@ -938,7 +1097,16 @@ function goto(step) {
     b.classList.toggle("done", n < step);
   });
   $("#map-hint").hidden = !(step === 1 && G.ok);
-  if (step === 2) { ensureFleet(); renderFleet(); $("#retorna").checked = state.opts.returnToDepot; $("#tempo-limite").value = state.opts.timeLimit; }
+  if (step === 2) {
+    ensureFleet(); renderFleet();
+    $("#retorna").checked = state.opts.returnToDepot;
+    $("#tempo-limite").value = state.opts.timeLimit;
+    const sel = $("#perfil"), ors = state.config.features.ors;
+    sel.querySelector('option[value="truck"]').disabled = !ors;
+    if (!ors && state.opts.profile === "truck") state.opts.profile = "car";
+    sel.value = state.opts.profile || "car";
+    $("#perfil-hint").hidden = ors;
+  }
   if (step === 3) renderResult();
   if (step !== 3) G.hidden.clear();
   $(".panel-body").scrollTop = 0;
@@ -1000,13 +1168,13 @@ async function runSolve() {
       tw_end: opts.useTW && !p.isDepot ? toMin(p.twEnd) - start : null,
     })),
     vehicles: state.fleet.map((v) => ({ name: v.name, capacity: Number(v.capacity), qty: Number(v.qty), cost_km: Number(v.costKm) || 0, fixed_cost: Number(v.fixedCost) || 0, depot: idx.get(v.depotId) })),
-    options: { return_to_depot: opts.returnToDepot, use_time_windows: opts.useTW, time_limit: Number(opts.timeLimit) || 30, horizon_min: Math.max(1, toMin(opts.dayEnd) - start) },
+    options: { return_to_depot: opts.returnToDepot, use_time_windows: opts.useTW, time_limit: Number(opts.timeLimit) || 30, horizon_min: Math.max(1, toMin(opts.dayEnd) - start), vehicle_profile: opts.profile || "car" },
   };
   const ov = $("#overlay");
   ov.hidden = false;
   $("#btn-avancar").disabled = true;
   try {
-    const data = await api("/api/solve", payload);
+    const data = await api("/api/solve", payload, 180000);
     data.points = pts;
     data.pointIds = pts.map((p) => p.id);
     data.opts = opts;
@@ -1033,6 +1201,7 @@ const STATUS_UI = {
 const SOURCE_TXT = {
   google: ["Distâncias e tempos reais pelas ruas · Google Routes API", false],
   osrm: ["Distâncias e tempos reais pelas ruas · OpenStreetMap (OSRM, gratuito)", false],
+  "ors-hgv": ["Distâncias e tempos para caminhão · OpenRouteService (perfil driving-hgv)", false],
   haversine: ["Distâncias estimadas (linha reta × 1,35): o serviço de rotas do OpenStreetMap não respondeu. Tente recalcular.", true],
 };
 
@@ -1075,7 +1244,9 @@ function renderResult() {
     return;
   }
 
-  const maxCost = Math.max(ex.cost, h.feasible ? h.cost : 0);
+  const com = res.commercial;
+  const comOk = com && !com.error && com.cost != null;
+  const maxCost = Math.max(ex.cost, h.feasible ? h.cost : 0, comOk ? com.cost : 0);
   const gap = res.gap_pct;
   const gapPill = !h.feasible ? '<span class="gap-pill pos">C&amp;W inviável com esta frota</span>'
     : gap > 0.005 ? `<span class="gap-pill pos">C&amp;W ${nf(1).format(gap)}% acima do ótimo</span>`
@@ -1099,7 +1270,12 @@ function renderResult() {
       <h3 id="cmp-t">Exato × heurística ${gapPill}</h3>
       <div class="cmp-row"><span>VRPSolverEasy<br><span class="cmp-meta">branch-cut-and-price</span></span><div class="bar"><span style="width:${(ex.cost / maxCost) * 100}%"></span></div><span class="cmp-v">${brl.format(ex.cost)}</span></div>
       <div class="cmp-row h"><span>Clarke &amp; Wright<br><span class="cmp-meta">savings · ${h.time_s < 0.001 ? "< 1 ms" : `${nf(3).format(h.time_s)} s`}</span></span><div class="bar"><span style="width:${h.feasible ? (h.cost / maxCost) * 100 : 0}%"></span></div><span class="cmp-v">${h.feasible ? brl.format(h.cost) : "—"}</span></div>
+      ${comOk ? `<div class="cmp-row c"><span>GraphHopper<br><span class="cmp-meta">otimizador comercial · ${com.gap_pct != null ? `${com.gap_pct > 0.005 ? "+" : ""}${nf(1).format(com.gap_pct)}%` : ""}</span></span><div class="bar"><span style="width:${(com.cost / maxCost) * 100}%"></span></div><span class="cmp-v">${brl.format(com.cost)}</span></div>`
+        : com?.error ? `<p class="cmp-meta">GraphHopper: ${esc(com.error)}</p>`
+          : !state.config.features.graphhopper ? '<p class="cmp-meta">Comparação com o GraphHopper (otimizador comercial): ative com uma chave grátis, veja o README.</p>' : ""}
     </section>
+    ${(res.notes || []).map((n) => `<p class="note">${esc(n)}</p>`).join("")}
+    <section class="weather" id="clima" aria-live="polite"><p class="cmp-meta">Consultando o clima nos horários das rotas…</p></section>
 
     <h3 class="list-title spaced">Rotas <span class="count">${ex.routes.length}</span></h3>
     <ol class="routes">
@@ -1113,7 +1289,8 @@ function renderResult() {
             <div><p class="route-t">Rota ${ri + 1} · ${esc(r.vehicle_name)}</p><p class="route-s">Sai de ${esc(dep.name)}</p></div>
             <p class="route-cost">${brl.format(r.cost)}</p>
           </div>
-          <p class="route-stats"><span><b>${nf(1).format(r.dist_km)}</b> km</span><span><b>${fmtDur(r.time_min)}</b></span><span><b>${r.stops.length}</b> paradas</span><span>carga <b>${nf().format(r.load)}</b>/${nf().format(r.capacity)}</span></p>
+          <p class="route-stats"><span><b>${nf(1).format(r.dist_km)}</b> km</span><span><b>${fmtDur(r.time_min)}</b></span><span><b>${r.stops.length}</b> paradas</span><span>carga <b>${nf().format(r.load)}</b>/${nf().format(r.capacity)}</span><span class="wx" data-wx="${ri}"></span></p>
+          ${r.traffic && !r.traffic.error ? `<p class="traffic">🚦 Com trânsito agora: <b>${fmtDur(r.traffic.with_traffic_s / 60)}</b> de direção${r.traffic.delay_s > 60 ? ` <span class="delay">(+${fmtDur(r.traffic.delay_s / 60)} de atraso)</span>` : " (trânsito livre)"} · TomTom</p>` : ""}
           <div class="route-load"><div class="bar" role="img" aria-label="Ocupação de ${nf().format(loadPct)}%"><span style="width:${loadPct}%"></span></div></div>
           <details>
             <summary>Sequência de entregas <span class="chev" aria-hidden="true"></span></summary>
@@ -1125,6 +1302,8 @@ function renderResult() {
           </details>
           <div class="route-actions">
             ${links.map((u, k) => `<a class="btn btn-ghost btn-sm" href="${esc(u)}" target="_blank" rel="noopener">${PIN} ${links.length > 1 ? `Google Maps · parte ${k + 1}` : "Abrir no Google Maps"}</a>`).join("")}
+            <a class="btn btn-ghost btn-sm" href="${esc(whatsappLink(routeMessage(r, ri, res)))}" target="_blank" rel="noopener">${WHATS} WhatsApp</a>
+            <button type="button" class="btn btn-ghost btn-sm" data-qr="${ri}">${QRICON} QR code</button>
             ${G.ok ? `<button type="button" class="btn btn-ghost btn-sm" data-focus="${ri}">Ver no mapa</button>` : ""}
           </div>
         </li>`;
@@ -1134,6 +1313,7 @@ function renderResult() {
     <div class="result-actions">
       <button type="button" class="btn btn-secondary" id="btn-print">Imprimir / PDF</button>
       <button type="button" class="btn btn-secondary" id="btn-json">Baixar JSON</button>
+      <button type="button" class="btn btn-new" id="btn-nova-2">${PLUS} Nova roteirização</button>
     </div>
 
     <details class="method">
@@ -1152,19 +1332,91 @@ function renderResult() {
             res.points.filter((p) => p.isDepot).length > 1 ? "multidepósito" : "depósito único",
             res.opts.useTW ? "com janelas de tempo" : "sem janelas",
             res.opts.returnToDepot ? "rotas fechadas" : "rotas abertas",
+            res.profile === "truck" ? "perfil caminhão" : "perfil carro",
           ].join(" · ")}</dd>
         </dl>
+        <p><strong>Serviços externos</strong></p>
+        <ul class="svc">
+          <li><i class="on"></i>Endereços e CEP: OpenStreetMap (Photon/Nominatim), ViaCEP e BrasilAPI</li>
+          <li><i class="on"></i>Distâncias pelas ruas: ${res.matrix.source === "ors-hgv" ? "OpenRouteService (caminhão)" : res.matrix.source === "google" ? "Google Routes" : "OSRM"}</li>
+          <li><i class="on"></i>Clima: Open-Meteo · Postos: Overpass (OpenStreetMap)</li>
+          <li><i class="${state.config.features.graphhopper ? "on" : ""}"></i>Comparação comercial: GraphHopper ${state.config.features.graphhopper ? "" : "(inativo: falta chave grátis)"}</li>
+          <li><i class="${state.config.features.ors ? "on" : ""}"></i>Caminhão e área atendida: OpenRouteService ${state.config.features.ors ? "" : "(inativo: falta chave grátis)"}</li>
+          <li><i class="${state.config.features.tomtom ? "on" : ""}"></i>Trânsito agora: TomTom ${state.config.features.tomtom ? "" : "(inativo: falta chave grátis)"}</li>
+        </ul>
       </div>
     </details>
     <p class="source-tag ${srcEst ? "est" : ""}"><i></i>${esc(srcTxt)}</p>`;
 
   $("#btn-print").addEventListener("click", () => { $$(".route details").forEach((d) => (d.open = true)); window.print(); });
   $("#btn-json").addEventListener("click", () => download(new Blob([JSON.stringify(res, null, 2)], { type: "application/json" }), "rotas.json"));
+  $("#btn-nova-2").addEventListener("click", (e) => novaRoteirizacao(e.currentTarget));
+  loadWeather(res);
+}
+
+/* ---- clima nas rotas (Open-Meteo) ---- */
+async function loadWeather(res) {
+  const box = $("#clima");
+  if (!box) return;
+  const ptById = new Map(res.points.map((p) => [p.id, p]));
+  const start = toMin(res.opts.dayStart);
+  try {
+    const cache = new Map();
+    const rows = [];
+    for (const [ri, r] of res.exact.routes.entries()) {
+      const pts = [r.depot, ...r.stops].map((i) => ptById.get(res.pointIds[i]));
+      const lat = pts.reduce((s, p) => s + p.lat, 0) / pts.length, lng = pts.reduce((s, p) => s + p.lng, 0) / pts.length;
+      const key = `${lat.toFixed(1)},${lng.toFixed(1)}`;
+      if (!cache.has(key)) cache.set(key, await forecast(lat, lng));
+      const w = summarizeWeather(cache.get(key), start, start + r.time_min);
+      if (!w) continue;
+      const info = weatherInfo(w.code);
+      const tmin = Math.round(w.tmin), tmax = Math.round(w.tmax);
+      const chip = `${info.icon} ${tmin === tmax ? tmin : `${tmin}–${tmax}`}°C · chuva ${w.rain}%`;
+      const el = $(`.wx[data-wx="${ri}"]`);
+      if (el) { el.textContent = chip; el.title = `Previsão no horário da rota (${info.text}) · Open-Meteo`; el.classList.toggle("rain", w.rain >= 50); }
+      rows.push({ ri, w, info });
+    }
+    if (state.result !== res) return;
+    const rainy = rows.filter((x) => x.w.rain >= 50);
+    box.innerHTML = rows.length
+      ? `<p><strong>Clima nos horários das rotas</strong> <span class="cmp-meta">· hoje · Open-Meteo</span></p>
+         <p class="cmp-meta">${rainy.length ? `☔ Atenção: chance alta de chuva na${rainy.length > 1 ? "s rotas" : " rota"} ${rainy.map((x) => x.ri + 1).join(", ")}. Considere folga nos horários.` : "Sem chance alta de chuva nos horários previstos."}</p>`
+      : '<p class="cmp-meta">Previsão do tempo indisponível para o horário das rotas (fora do dia de hoje).</p>';
+  } catch {
+    box.innerHTML = '<p class="cmp-meta">Previsão do tempo indisponível agora.</p>';
+  }
+}
+
+/* ---- compartilhar rota (WhatsApp / QR code) ---- */
+function routeMessage(r, ri, res) {
+  const ptById = new Map(res.points.map((p) => [p.id, p]));
+  const P = (i) => ptById.get(res.pointIds[i]);
+  const start = toMin(res.opts.dayStart);
+  const lines = [`*Rota ${ri + 1} · ${r.vehicle_name}* (Rota Roda)`, `Saída: ${P(r.depot).name} às ${fmtClock(start)}`];
+  r.stops.forEach((s, k) => { const p = P(s); lines.push(`${k + 1}. ${p.name} (${nf().format(p.demand)} un.) ~${fmtClock(start + r.arrivals[k])}`); });
+  lines.push(`Total: ${nf(1).format(r.dist_km)} km · ${fmtDur(r.time_min)}`);
+  lines.push(`Navegação: ${mapsLinks(r, res)[0]}`);
+  return lines.join("\n");
+}
+
+async function showQR(ri) {
+  const res = state.result;
+  const r = res.exact.routes[ri];
+  const url = mapsLinks(r, res)[0];
+  if (!window.qrcode) await loadScript("/static/vendor/qrcode.js");
+  $("#qr-title").textContent = `Rota ${ri + 1} · ${r.vehicle_name}`;
+  $("#qr-box").innerHTML = qrSvg(url);
+  $("#qr-link").href = url;
+  const dlg = $("#qr-dialog");
+  dlg.showModal();
 }
 
 $("#resultado").addEventListener("click", (e) => {
   const f = e.target.closest("[data-focus]");
   if (f) focusRoute(Number(f.dataset.focus));
+  const q = e.target.closest("[data-qr]");
+  if (q) showQR(Number(q.dataset.qr)).catch(() => toast("Não foi possível gerar o QR code.", true));
 });
 $("#resultado").addEventListener("mouseover", (e) => {
   const r = e.target.closest(".route");

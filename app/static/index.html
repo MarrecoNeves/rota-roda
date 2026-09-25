@@ -24,8 +24,12 @@
         </div>
         <div>
           <h1>Rota Roda</h1>
-          <p class="brand-sub">Roteirizador VRP · Tópicos Especiais em EP · UFF</p>
+          <p class="brand-sub">Roteirizador VRP · UFF</p>
         </div>
+        <button type="button" class="btn btn-new btn-sm" id="btn-nova" title="Apagar tudo e começar uma nova roteirização" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Nova roteirização
+        </button>
       </header>
 
       <nav class="stepper" aria-label="Etapas">
@@ -40,12 +44,12 @@
         <!-- ============ ETAPA 1: PONTOS ============ -->
         <section class="stage" id="stage-1" aria-labelledby="t1">
           <h2 id="t1" class="stage-title">Depósito e clientes</h2>
-          <p class="stage-lead">Busque o endereço e escolha na lista, ou clique direto no mapa. O primeiro ponto vira o depósito.</p>
+          <p class="stage-lead">Busque pelo endereço ou <strong>CEP</strong> e escolha na lista, ou clique direto no mapa. O primeiro ponto vira o depósito.</p>
 
           <div class="search" role="combobox" aria-haspopup="listbox" aria-owns="sugestoes" aria-expanded="false" id="search-box">
             <label for="busca" class="sr-only">Buscar endereço</label>
             <svg class="search-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input id="busca" type="text" autocomplete="off" placeholder="Rua, número, bairro, cidade" aria-autocomplete="list" aria-controls="sugestoes">
+            <input id="busca" type="text" autocomplete="off" placeholder="Rua, número, bairro — ou um CEP" aria-autocomplete="list" aria-controls="sugestoes">
             <ul id="sugestoes" class="suggestions" role="listbox" hidden></ul>
           </div>
 
@@ -83,7 +87,7 @@
           <div class="list-head">
             <h3 class="list-title">Pontos <span class="count" id="count-pontos">0</span></h3>
             <span class="list-meta"><span class="muted small" id="resumo-demanda"></span>
-            <button type="button" class="btn btn-ghost btn-sm btn-danger-text" id="btn-limpar" hidden>Limpar</button></span>
+            <button type="button" class="btn btn-outline-danger btn-sm" id="btn-limpar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg> Limpar pontos</button></span>
           </div>
           <ol class="points" id="lista-pontos" aria-live="polite"></ol>
           <div class="empty" id="vazio-pontos">
@@ -110,6 +114,14 @@
           <h3 class="list-title spaced">Opções</h3>
           <div class="options">
             <label class="switch"><input type="checkbox" id="retorna" checked><span class="switch-ui" aria-hidden="true"></span><span>Veículos retornam ao depósito</span></label>
+            <div class="field inline">
+              <label for="perfil">Tipo de veículo no trajeto</label>
+              <select id="perfil" class="select-sm">
+                <option value="car">Carro / van</option>
+                <option value="truck">Caminhão (OpenRouteService)</option>
+              </select>
+            </div>
+            <p class="hint" id="perfil-hint">O perfil caminhão (ruas permitidas e velocidades de caminhão) fica ativo com a chave grátis do OpenRouteService.</p>
             <div class="field inline">
               <label for="tempo-limite">Tempo máximo do solver</label>
               <div class="input-suffix"><input type="number" id="tempo-limite" min="5" max="120" step="5" value="30" inputmode="numeric"><span>s</span></div>
@@ -145,12 +157,27 @@
         <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 12l12-5 12 5 12-5v29l-12 5-12-5-12 5z"/><path d="M18 7v29M30 12v29"/></svg>
         <p><strong>Mapa indisponível</strong><br><span id="map-empty-msg">Verifique a conexão com a internet. O cálculo das rotas funciona mesmo assim.</span></p>
       </div>
-      <div class="map-legend" id="legenda" hidden></div>
+      <div class="map-side">
+        <div class="map-layers" id="camadas" hidden></div>
+        <div class="map-legend" id="legenda" hidden></div>
+      </div>
       <div class="map-hint" id="map-hint">Clique no mapa para adicionar um ponto · arraste um marcador para ajustar</div>
     </section>
   </div>
 
   <div class="toast" id="toast" role="alert" hidden></div>
+
+  <dialog class="qr-dialog" id="qr-dialog" aria-labelledby="qr-title">
+    <form method="dialog">
+      <h2 id="qr-title">Rota</h2>
+      <p class="muted small">Aponte a câmera do celular para abrir a navegação no Google Maps.</p>
+      <div id="qr-box" class="qr-box"></div>
+      <div class="qr-actions">
+        <a id="qr-link" class="btn btn-ghost btn-sm" target="_blank" rel="noopener">Abrir link</a>
+        <button class="btn btn-primary btn-sm" value="close">Fechar</button>
+      </div>
+    </form>
+  </dialog>
 
   <div class="overlay" id="overlay" hidden>
     <div class="overlay-card" role="dialog" aria-modal="true" aria-labelledby="ov-title">
