@@ -2,6 +2,10 @@
 
 **Tópicos Especiais em Engenharia de Produção (Roteamento) · UFF**
 
+**No ar:** https://rota-roda-uff.onrender.com
+
+**Desenvolvedores:** Daniel Neves, Juan Souza, Pedro Souza e Pedro Jensen
+
 Aplicação web que resolve problemas de roteamento de veículos a partir de endereços reais e
 desenha as rotas no mapa. O cálculo é **exato**, feito com o
 [VRPSolverEasy](https://github.com/inria-UFF/VRPSolverEasy) (branch-cut-and-price).
@@ -30,6 +34,12 @@ O Google Maps é opcional.
 - **"Abrir no Google Maps"** em cada rota, com navegação pronta para o motorista. Esses links são gratuitos e não precisam de chave.
 - **Exportação para Excel** (resumo, custos por rota e sequência com horários).
 - **Degradação segura:** se um serviço de mapa cair, o app continua funcionando e a tela informa a fonte usada.
+
+## Identidade visual
+
+O app usa as cores institucionais da UFF (Azul-UFF `#004f9f` e Cinza-UFF `#eaeaea`, conforme o manual da
+marca da universidade). O ícone é original, uma roda cujo raio vira uma rota, e **não** reproduz o logotipo
+oficial da UFF.
 
 ## Serviços usados (todos gratuitos por padrão)
 
@@ -100,7 +110,11 @@ O VRPSolverEasy tem binários para Windows 64 bits, Linux e macOS Intel. No Mac 
 - o app "adormece" após 15 min sem uso, e o primeiro acesso depois disso leva cerca de 1 minuto;
 - são 750 horas grátis por mês, o que é suficiente para um app só.
 
-Abra o link um pouco antes de o professor acessar.
+**Solução para o app não dormir:** o workflow `.github/workflows/manter-acordado.yml` usa o GitHub Actions
+(grátis em repositórios públicos) para visitar o app a cada 10 minutos. Assim o link abre na hora.
+Ligado 24 h, o app consome cerca de 744 h/mês, dentro das 750 h grátis.
+O GitHub pausa agendamentos em repositórios sem atividade por 60 dias; se isso acontecer, é só reativar
+em *Actions*.
 
 ## Google Maps (opcional)
 
