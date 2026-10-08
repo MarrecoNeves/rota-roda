@@ -355,9 +355,9 @@ svg { flex: none; }
 .iw b { font-variant-numeric: tabular-nums; }
 
 /* ---------- toast e overlay ---------- */
-.toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 60; background: #0f172a; color: #fff; padding: var(--s3) var(--s5); border-radius: var(--r-md); box-shadow: var(--shadow-2); font-size: var(--fs-sm); max-width: min(560px, calc(100vw - 32px)); }
+.toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 2000; background: #0f172a; color: #fff; padding: var(--s3) var(--s5); border-radius: var(--r-md); box-shadow: var(--shadow-2); font-size: var(--fs-sm); max-width: min(560px, calc(100vw - 32px)); }
 .toast.err { background: var(--danger); }
-.overlay { position: fixed; inset: 0; z-index: 40; background: rgba(15, 23, 42, .35); backdrop-filter: blur(2px); display: grid; place-items: center; padding: var(--s4); }
+.overlay { position: fixed; inset: 0; z-index: 1500; background: rgba(15, 23, 42, .35); backdrop-filter: blur(2px); display: grid; place-items: center; padding: var(--s4); }
 .overlay-card { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-2); padding: var(--s6) var(--s8); text-align: center; display: grid; gap: var(--s3); justify-items: center; max-width: 380px; }
 .ov-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: var(--fs-sm); color: var(--ink-3); text-align: left; }
 .ov-steps li::before { content: "•"; color: var(--brand); margin-right: 8px; font-weight: 700; }
@@ -411,3 +411,21 @@ svg { flex: none; }
 .qr-box svg { width: 100%; height: 100%; }
 .qr-actions { display: flex; justify-content: space-between; gap: var(--s2); }
 @media (max-width: 900px) { .map-side { max-width: 200px; } .map-layers { font-size: var(--fs-xs); } }
+
+/* ---------- importação: colar, arrastar e progresso ---------- */
+.paste-dialog { max-width: 560px; display: none; }
+.paste-dialog[open] { display: grid; gap: var(--s3); }
+.paste-dialog code { background: var(--bg); padding: 1px 5px; border-radius: 4px; font-size: .92em; }
+.paste-dialog textarea { width: 100%; font: inherit; font-size: var(--fs-sm); line-height: 1.5; padding: var(--s3); border: 1px solid var(--line, #cbd5e1); border-radius: var(--r-md); resize: vertical; min-height: 180px; }
+.paste-dialog textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: transparent; }
+.paste-dialog .qr-actions { justify-content: flex-end; }
+.field-err { color: var(--danger); min-height: 1em; margin: 0; }
+.import-card { min-width: min(360px, calc(100vw - 32px)); }
+.import-track { width: 100%; height: 8px; border-radius: 99px; background: var(--brand-soft); overflow: hidden; }
+.import-track span { display: block; height: 100%; width: 4%; background: var(--brand); border-radius: inherit; transition: width .3s ease; }
+.drop-hint { position: fixed; inset: 0; z-index: 1800; display: none; place-items: center; background: rgba(0, 79, 159, .18); backdrop-filter: blur(2px); pointer-events: none; }
+body.dropping .drop-hint { display: grid; }
+.drop-card { display: grid; justify-items: center; gap: 6px; padding: var(--s6) var(--s8); background: var(--surface); border: 3px dashed var(--brand); border-radius: var(--r-lg); box-shadow: var(--shadow-2); color: var(--ink-2, #334155); }
+.drop-card svg { width: 40px; height: 40px; fill: none; stroke: var(--brand); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.drop-card strong { font-size: var(--fs-lg); color: var(--brand); }
+.toast { cursor: pointer; }

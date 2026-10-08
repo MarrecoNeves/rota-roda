@@ -97,12 +97,14 @@ export const OSM = {
   },
 
   /** Vários endereços em sequência (respeita 1 req/s). */
-  async batch(addresses, onProgress) {
+  async batch(addresses, onProgress, shouldStop) {
     const out = [];
     for (let i = 0; i < addresses.length; i++) {
+      if (shouldStop?.()) break;
       onProgress?.(i, addresses.length);
       try { out.push(await OSM.search(addresses[i])); } catch { out.push(null); }
     }
+    onProgress?.(out.length, addresses.length);
     return out;
   },
 };

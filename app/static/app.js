@@ -3,6 +3,7 @@
    ========================================================================== */
 
 import { OSM, isCEP, lookupCEP, cepAddress, forecast, summarizeWeather, weatherInfo, fuelStations, whatsappLink, qrSvg } from "./services.js";
+import { readWorkbook, parsePasted, PlanilhaError } from "./planilha.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -67,14 +68,15 @@ const fmtDur = (min) => { const t = Math.round(min); const h = Math.floor(t / 60
    UI utilitária
    -------------------------------------------------------------------------- */
 let toastTimer;
-function toast(msg, isErr = false) {
+function toast(msg, isErr = false, ms = 0) {
   const t = $("#toast");
   t.textContent = msg;
   t.classList.toggle("err", isErr);
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (t.hidden = true), isErr ? 7000 : 3500);
+  toastTimer = setTimeout(() => (t.hidden = true), ms || (isErr ? 7000 : 3500));
 }
+$("#toast").addEventListener("click", () => { $("#toast").hidden = true; });
 function footMsg(msg, isErr = false) {
   const f = $("#foot-msg");
   f.textContent = msg;
@@ -858,86 +860,170 @@ async function refineExample(ids) {
     if (n) { changed(); renderMap(); }
   } catch { /* mantém as coordenadas embutidas */ }
 }
-/* ---- importação de planilha (.xlsx / .csv) ---- */
+/* ---- importação de planilha (.xlsx / .xls / .ods / .csv) e colar endereços ---- */
 async function xlsxLib() {
   if (!window.XLSX) await loadScript("/static/vendor/xlsx.full.min.js");
   return window.XLSX;
 }
-const norm = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z]/g, "");
-function pickCol(row, names) {
-  for (const k of Object.keys(row)) if (names.includes(norm(k))) return row[k];
-  return undefined;
-}
-const truthy = (v) => ["sim", "s", "x", "1", "true", "yes", "deposito"].includes(norm(v ?? ""));
-const asTime = (v) => {
-  if (v === undefined || v === "") return undefined;
-  if (typeof v === "number") return fmtClock(v * 24 * 60); // fração do dia (Excel)
-  return String(v).slice(0, 5);
-};
 
-$("#btn-importar").addEventListener("click", () => $("#arquivo").click());
-$("#arquivo").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
-  e.target.value = "";
-  if (!file) return;
+async function readSpreadsheet(file) {
+  const XLSX = await xlsxLib();
+  let wb;
+  if (/\.(csv|txt)$/i.test(file.name)) {
+    // CSV: aceita UTF-8 ou Windows-1252 (padrão do Excel em português) e separador ; , ou tab
+    const buf = await file.arrayBuffer();
+    let text = new TextDecoder("utf-8").decode(buf);
+    if (text.includes("�")) text = new TextDecoder("windows-1252").decode(buf);
+    text = text.replace(/^﻿/, "");
+    const head = text.split(/\r?\n/).slice(0, 5).join("\n");
+    const count = (re) => (head.match(re) || []).length;
+    const FS = count(/\t/g) > 0 ? "\t" : count(/;/g) >= count(/,/g) && count(/;/g) > 0 ? ";" : ",";
+    wb = XLSX.read(text, { type: "string", FS, raw: true });
+  } else {
+    wb = XLSX.read(await file.arrayBuffer());
+  }
+  return readWorkbook(XLSX, wb);
+}
+
+// Painel de progresso da importação (com botão cancelar)
+const imp = { cancel: false, busy: false };
+function importProgress(text, i = 0, n = 0) {
+  const ov = $("#import-ov");
+  if (text === null) { ov.hidden = true; return; }
+  ov.hidden = false;
+  $("#import-txt").textContent = text;
+  $("#import-bar").style.width = n ? `${Math.max(4, Math.round((i / n) * 100))}%` : "4%";
+  $("#import-count").textContent = n ? `${i} de ${n}` : "";
+}
+$("#import-cancel").addEventListener("click", () => { imp.cancel = true; });
+
+async function importItems(items, { source = "", blankDemand = 0, note = "", append = false } = {}) {
+  if (!items.length) throw new Error("Nenhum endereço para importar.");
+  const total = (append ? state.points.length : 0) + items.length;
+  if (total > state.config.max_points) throw new Error(`Seriam ${total} pontos; o limite é ${state.config.max_points}.`);
+  imp.cancel = false;
+  imp.busy = true;
   try {
-    footMsg("Lendo planilha…");
-    const XLSX = await xlsxLib();
-    let wb;
-    if (/\.csv$/i.test(file.name)) {
-      // CSV: aceita UTF-8 ou Windows-1252 (padrão do Excel em português) e separador ; ou ,
-      const buf = await file.arrayBuffer();
-      let text = new TextDecoder("utf-8").decode(buf);
-      if (text.includes("\uFFFD")) text = new TextDecoder("windows-1252").decode(buf);
-      const head = text.split(/\r?\n/)[0];
-      const FS = (head.match(/;/g) || []).length > (head.match(/,/g) || []).length ? ";" : ",";
-      wb = XLSX.read(text.replace(/^\uFEFF/, ""), { type: "string", FS });
-    } else {
-      wb = XLSX.read(await file.arrayBuffer());
-    }
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
-    if (!rows.length) throw new Error("A planilha está vazia.");
-    const items = rows.map((r) => ({
-      address: String(pickCol(r, ["endereco", "address", "local"]) ?? "").trim(),
-      name: String(pickCol(r, ["nome", "name", "cliente"]) ?? "").trim(),
-      demand: Number(pickCol(r, ["demanda", "demand", "quantidade"]) || 0),
-      isDepot: truthy(pickCol(r, ["deposito", "depot", "tipo"])),
-      lat: Number(pickCol(r, ["lat", "latitude"])) || null,
-      lng: Number(pickCol(r, ["lng", "lon", "long", "longitude"])) || null,
-      twStart: asTime(pickCol(r, ["inicio", "abre", "janelainicio", "twstart"])),
-      twEnd: asTime(pickCol(r, ["fim", "fecha", "janelafim", "twend"])),
-      service: Number(pickCol(r, ["servico", "atendimento", "tempoatendimento", "service"]) || 5),
-      cep: String(pickCol(r, ["cep"]) ?? "").trim(),
-      number: String(pickCol(r, ["numero", "num", "n"]) ?? "").trim(),
-    })).filter((x) => x.address || x.cep || (x.lat && x.lng));
-    if (!items.length) throw new Error("Não achei a coluna 'endereco' (ou 'cep', ou 'lat'/'lng') na planilha.");
-    if (items.length > state.config.max_points) throw new Error(`A planilha tem ${items.length} pontos; o limite é ${state.config.max_points}.`);
-    if (!items.some((x) => x.isDepot)) items[0].isDepot = true;
-    for (const x of items.filter((x) => !x.address && x.cep && !(x.lat && x.lng))) {
-      try { const c = await lookupCEP(x.cep); x.address = cepAddress(c, x.number || ""); } catch { /* segue sem */ }
+    // CEP sem endereço → ViaCEP / BrasilAPI preenchem rua, bairro e cidade
+    const ceps = items.filter((x) => !x.address && x.cep && !(x.lat && x.lng));
+    for (let k = 0; k < ceps.length && !imp.cancel; k++) {
+      importProgress("Consultando CEPs…", k, ceps.length);
+      const x = ceps[k];
+      try {
+        const c = await lookupCEP(x.cep);
+        x.address = cepAddress(c, x.number || "");
+        if (c.lat && c.lng && !x.number) Object.assign(x, { lat: c.lat, lng: c.lng });
+      } catch { /* segue: a linha fica como não localizada */ }
     }
     const need = items.filter((x) => !(x.lat && x.lng) && x.address);
-    if (need.length) {
-      const results = await geocodeMany(need.map((x) => x.address), "Localizando endereços da planilha");
-      results.forEach((r, i) => { if (r) Object.assign(need[i], { lat: r.lat, lng: r.lng, formatted: r.address }); });
+    if (need.length && !imp.cancel) {
+      const label = "Localizando endereços no mapa…";
+      importProgress(label, 0, need.length);
+      const results = state.config.server_key
+        ? await geocodeMany(need.map((x) => x.address), null)
+        : await OSM.batch(need.map((x) => x.address), (i, n) => importProgress(label, i, n), () => imp.cancel);
+      results.forEach((r, i) => { if (r) Object.assign(need[i], { lat: r.lat, lng: r.lng }); });
     }
+    if (imp.cancel) { toast("Importação cancelada. Nada foi alterado."); return; }
+
     const ok = items.filter((x) => x.lat && x.lng);
-    const fail = items.length - ok.length;
-    if (!ok.length) throw new Error("Nenhum endereço da planilha foi localizado. Confira os endereços ou inclua colunas lat e lng.");
-    state.points = ok.map((x) => ({
-      id: uid(), name: x.name || shortName(x.address), address: x.formatted || x.address, lat: x.lat, lng: x.lng,
-      demand: x.isDepot ? 0 : x.demand || 10, isDepot: x.isDepot, service: x.service,
-      twStart: x.twStart || state.opts.dayStart, twEnd: x.twEnd || state.opts.dayEnd,
+    const fail = items.filter((x) => !(x.lat && x.lng));
+    if (!ok.length) throw new Error("Nenhum endereço foi localizado no mapa. Confira se cada linha tem rua, número, bairro e cidade.");
+    const keep = append ? state.points : [];
+    if (!keep.some((p) => p.isDepot) && !ok.some((x) => x.isDepot)) ok[0].isDepot = true;
+    const replaced = !append && state.points.length > 0;
+    state.points = keep.concat(ok.map((x) => {
+      const address = x.address || `CEP ${x.cep.replace(/(\d{5})(\d{3})/, "$1-$2")}`;
+      return {
+        id: uid(), name: x.name || shortName(address), address, lat: x.lat, lng: x.lng,
+        demand: x.isDepot ? 0 : (x.demand ?? 10), isDepot: x.isDepot, service: x.service ?? 5,
+        twStart: x.twStart || state.opts.dayStart, twEnd: x.twEnd || state.opts.dayEnd,
+      };
     }));
-    if (items.some((x) => x.twStart || x.twEnd)) { state.opts.useTW = true; $("#usar-tw").checked = true; $("#tw-box").open = true; }
+    if (items.some((x) => x.twStart || x.twEnd)) { state.opts.useTW = true; $("#usar-tw").checked = true; $("#tw-box").open = true; renderTWSummary(); }
     fixFleetDepots();
     changed();
     renderPoints();
     renderMap(true);
-    toast(fail ? `${ok.length} pontos importados; ${fail} endereço(s) não encontrado(s).` : `${ok.length} pontos importados.`, fail > 0);
+
+    const parts = [`${ok.length} ponto${ok.length > 1 ? "s" : ""} ${append ? "adicionado" : "importado"}${ok.length > 1 ? "s" : ""}${source ? ` ${source}` : ""}`];
+    if (replaced) parts.push("os pontos anteriores foram substituídos");
+    if (note) parts.push(note);
+    const semDemanda = ok.filter((x) => !x.isDepot && x.demand == null).length;
+    if (blankDemand && semDemanda) parts.push(`${semDemanda} sem demanda ficaram com 10 (ajuste na lista)`);
+    if (fail.length) {
+      const which = fail.slice(0, 3).map((x) => `linha ${x.line}: ${shortName(x.address || x.cep)}`).join(" · ");
+      parts.push(`${fail.length} não localizado${fail.length > 1 ? "s" : ""} (${which}${fail.length > 3 ? " …" : ""}). Inclua bairro e cidade ou adicione pela busca`);
+    }
+    const msg = parts.join(" · ") + ".";
+    toast(msg, fail.length > 0, fail.length || note ? 14000 : 5000);
+    footMsg(msg, fail.length > 0);
+  } finally {
+    imp.busy = false;
+    importProgress(null);
+    updateFooter();
+  }
+}
+
+async function importFile(file) {
+  if (!file || imp.busy) return;
+  if (!/\.(xlsx|xlsm|xls|ods|csv|txt)$/i.test(file.name)) { toast("Use uma planilha .xlsx, .xls, .ods ou .csv.", true); return; }
+  try {
+    importProgress(`Lendo “${file.name}”…`);
+    let r;
+    try {
+      r = await readSpreadsheet(file);
+    } catch (e) {
+      if (e instanceof PlanilhaError) throw e;
+      console.error(e);
+      throw new Error(`Não consegui abrir “${file.name}”. No Excel, use Arquivo → Salvar como → Pasta de Trabalho do Excel (.xlsx) e importe de novo.`);
+    }
+    const notes = [];
+    if (r.usedExample) notes.push("a aba Pontos estava vazia, então importei a aba Exemplo");
+    if (r.headerless) notes.push("a planilha não tinha cabeçalho; usei a coluna que parece endereço");
+    await importItems(r.items, { source: `da aba “${r.sheet}”`, blankDemand: r.blankDemand, note: notes.join(" · ") });
   } catch (err) {
-    toast(err.message, true);
-  } finally { updateFooter(); }
+    importProgress(null);
+    toast(err.message || "Não consegui ler a planilha.", true, 12000);
+    footMsg(err.message || "Não consegui ler a planilha.", true);
+  }
+}
+
+$("#btn-importar").addEventListener("click", () => $("#arquivo").click());
+$("#arquivo").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  importFile(file);
+});
+
+// Arrastar e soltar a planilha em qualquer parte do painel ou do mapa
+let dragDepth = 0;
+const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
+window.addEventListener("dragenter", (e) => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; document.body.classList.add("dropping"); });
+window.addEventListener("dragover", (e) => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener("dragleave", (e) => { if (!hasFiles(e)) return; dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) document.body.classList.remove("dropping"); });
+window.addEventListener("drop", (e) => {
+  if (!hasFiles(e)) return;
+  e.preventDefault();
+  dragDepth = 0;
+  document.body.classList.remove("dropping");
+  if (state.step !== 1) goto(1);
+  importFile(e.dataTransfer.files[0]);
+});
+
+// Colar uma lista de endereços (um por linha)
+const pasteDlg = $("#paste-dialog");
+$("#btn-colar").addEventListener("click", () => { $("#paste-txt").value = ""; $("#paste-err").textContent = ""; pasteDlg.showModal(); $("#paste-txt").focus(); });
+$("#paste-cancel").addEventListener("click", () => pasteDlg.close());
+$("#paste-ok").addEventListener("click", async () => {
+  const { items, blankDemand } = parsePasted($("#paste-txt").value);
+  if (!items.length) { $("#paste-err").textContent = "Cole pelo menos um endereço (um por linha)."; return; }
+  pasteDlg.close();
+  try {
+    await importItems(items, { source: "da lista colada", blankDemand, append: true });
+  } catch (err) {
+    toast(err.message, true, 10000);
+  }
 });
 
 /* ---- janelas de tempo ---- */
