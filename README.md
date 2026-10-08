@@ -15,7 +15,7 @@ O Google Maps é opcional.
 
 | Etapa | O que acontece |
 |---|---|
-| **1. Pontos** | Busca de endereço com sugestões enquanto digita, clique no mapa ou importação de planilha. Os marcadores podem ser arrastados para ajustar a posição. |
+| **1. Pontos** | Busca de endereço ou CEP com sugestões enquanto digita, clique no mapa, lista colada ou planilha (inclusive arrastando o arquivo). Os marcadores podem ser arrastados para ajustar a posição. |
 | **2. Frota** | Tipos de veículo com capacidade, quantidade, custo/km, custo fixo e depósito de origem. |
 | **3. Rotas** | Matriz de distâncias pelas ruas → Clarke & Wright → VRPSolverEasy. Rotas no mapa com setas de sentido, indicadores, horários previstos, links de navegação e exportação para Excel. |
 
@@ -38,7 +38,7 @@ O Google Maps é opcional.
 ## Identidade visual
 
 O app usa as cores institucionais da UFF (Azul-UFF `#004f9f` e Cinza-UFF `#eaeaea`, conforme o manual da
-marca da universidade). O ícone é original, uma roda cujo raio vira uma rota, e **não** reproduz o logotipo
+marca da universidade). O ícone é original, uma estrada em forma de roda com um marcador de parada, e **não** reproduz o logotipo
 oficial da UFF.
 
 ## Recursos extras
@@ -66,6 +66,9 @@ na nuvem costumam ser bloqueados pelos serviços públicos de endereço do OpenS
 2. No Render, abra o serviço **rota-roda-uff** → **Environment** → **Add Environment Variable** e cadastre
    `GRAPHHOPPER_API_KEY`, `ORS_API_KEY` e `TOMTOM_API_KEY`. Salve, e o app reinicia sozinho.
 3. Sem as chaves, o app funciona normalmente e esses três recursos aparecem como "inativos".
+
+> **Limite do plano grátis do GraphHopper:** 1 veículo e até 5 locais por cálculo, uso não comercial.
+> Em problemas maiores, a comparação aparece como "GraphHopper recusou o problema" e o resto do app segue normal.
 
 A comparação com o GraphHopper usa as rotas que ele devolve, mas recalcula o custo **com a mesma matriz de
 distâncias** do VRPSolverEasy. Assim a comparação é justa, e o valor exato nunca fica acima do comercial.
@@ -101,8 +104,9 @@ app/
   extras.py      GraphHopper, OpenRouteService e TomTom (opcionais, com chave grátis)
   solver.py      modelagem VRPSolverEasy, Clarke & Wright, avaliação de rotas
   geo.py         OpenStreetMap (Photon, Nominatim, OSRM) e Google, com fallbacks
-  static/        index.html, styles.css, app.js, services.js + vendor/ (Leaflet, SheetJS e QR code locais)
-tests/           28 testes (inclui conferência do ótimo por força bruta)
+  static/        index.html, styles.css, app.js, services.js, planilha.js + vendor/ (Leaflet, SheetJS e QR code locais)
+tests/           28 testes em Python (inclui conferência do ótimo por força bruta) + tests/js (leitor de planilhas)
+tools/           gerar_modelo.py (gera a planilha-modelo)
 Dockerfile, render.yaml, requirements.txt
 ```
 
@@ -166,18 +170,41 @@ Com a chave do navegador, o app usa o Google Maps. Sem ela, volta sozinho para o
 
 ## Planilha de importação
 
-Use o botão **Modelo .xlsx** no app. A primeira aba é lida, e os nomes das colunas não diferenciam
-maiúsculas nem acentos.
+Há três jeitos de trazer muitos pontos de uma vez:
 
-| Coluna | Obrigatória | Exemplo |
+- **Baixar modelo** → preencher → **Importar planilha** (ou arrastar o arquivo para a tela);
+- **Colar endereços**: cola uma lista (um por linha) copiada de qualquer lugar. Para informar a demanda,
+  use `endereço; demanda`. Os pontos colados são **adicionados** aos que já estão na lista;
+- **Importar a sua própria planilha**: o app procura sozinho a linha de cabeçalho e a aba certa.
+
+O modelo (`app/static/modelo_pontos.xlsx`, gerado por `tools/gerar_modelo.py`) tem três abas:
+
+| Aba | Para quê |
+|---|---|
+| **Pontos** | onde se colam os endereços. A linha 5 já vem marcada como depósito; 200 linhas prontas, com listas e validações |
+| **Exemplo** | o caso de Niterói preenchido. Se a aba Pontos estiver vazia, o app importa o Exemplo |
+| **Como usar** | passo a passo e explicação de cada coluna |
+
+Colunas reconhecidas (maiúsculas, acentos, `?`, `(min)` etc. não importam; o cabeçalho pode estar abaixo de um título):
+
+| Campo | Nomes aceitos | Obrigatório |
 |---|---|---|
-| `endereco` | sim (ou `lat` + `lng`) | Rua da Conceição, 100, Centro, Niterói, RJ |
-| `demanda` | sim para clientes | 80 |
-| `deposito` | não (padrão: 1ª linha) | sim |
-| `nome` | não | Loja Centro |
-| `inicio` / `fim` | não (ativam janelas de tempo) | 09:00 / 12:00 |
-| `servico` | não (minutos, padrão 5) | 10 |
-| `cep` / `numero` | não (substituem o endereço) | 24020-085 / 100 |
+| Endereço | `Endereço`, `Endereço completo`, `Local` | sim, ou uma das alternativas abaixo |
+| Endereço em partes | `Rua`/`Logradouro` + `Número` + `Bairro` + `Cidade` + `UF` | alternativa |
+| CEP | `CEP` (aceita CEP digitado como número, sem o zero inicial) | alternativa |
+| Coordenadas | `Latitude` / `Longitude` (aceita vírgula decimal) | alternativa |
+| Demanda | `Demanda`, `Quantidade`, `Qtd`, `Volume`, `Carga`, `Peso` | recomendada (vazio = 10) |
+| Depósito | `Depósito?`, `Tipo` (`Sim`, `X`, `Depósito`, `CD`) | não (sem marcação, a 1ª linha vira depósito) |
+| Nome | `Nome`, `Cliente`, `Loja` | não |
+| Janela de tempo | `Abre às` / `Fecha às`, `Início` / `Fim` (`09:00`, `9h30` ou hora do Excel) | não |
+| Atendimento | `Atendimento (min)`, `Tempo de serviço` | não (padrão 5 min) |
+
+Uma planilha **sem cabeçalho**, só com endereços numa coluna, também funciona. Ao terminar, o app informa
+quantos pontos entraram e quais linhas não foram localizadas no mapa. O mapa gratuito localiza cerca de
+1 endereço por segundo; há uma barra de progresso com botão **Cancelar**.
+
+Testes do leitor: `node tests/js/planilha.test.mjs` (12 casos: modelo vazio e preenchido, título acima do
+cabeçalho, colunas separadas, sem cabeçalho, CSV, lat/lng, colar lista).
 
 ## Método
 
