@@ -290,9 +290,19 @@ def traffic_tile(z: int, x: int, y: int):
 # --------------------------------------------------------------------------- #
 # Front-end
 # --------------------------------------------------------------------------- #
+@app.middleware("http")
+async def no_stale_frontend(request: Request, call_next):
+    # Sem isso o navegador guarda app.js antigo por dias depois de um deploy
+    resp = await call_next(request)
+    path = request.url.path
+    if path == "/" or path.endswith((".js", ".css", ".html", ".xlsx")):
+        resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
 @app.get("/")
 def index():
-    return FileResponse(STATIC / "index.html")
+    return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-cache"})
 
 
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
