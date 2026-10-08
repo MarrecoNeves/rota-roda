@@ -2,8 +2,8 @@
    Rota Roda — front-end (OpenStreetMap ou Google Maps + API FastAPI/VRPSolverEasy)
    ========================================================================== */
 
-import { OSM, isCEP, lookupCEP, cepAddress, forecast, summarizeWeather, weatherInfo, fuelStations, whatsappLink, qrSvg } from "./services.js";
-import { readWorkbook, parsePasted, PlanilhaError } from "./planilha.js";
+import { OSM, isCEP, lookupCEP, cepAddress, forecast, summarizeWeather, weatherInfo, fuelStations, whatsappLink, qrSvg } from "./services.js?v=20261008";
+import { readWorkbook, parsePasted, PlanilhaError } from "./planilha.js?v=20261008";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
