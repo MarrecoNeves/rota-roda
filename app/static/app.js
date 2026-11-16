@@ -2,9 +2,9 @@
    Rota Roda — front-end (OpenStreetMap ou Google Maps + API FastAPI/VRPSolverEasy)
    ========================================================================== */
 
-import { OSM, isCEP, lookupCEP, cepAddress, forecast, summarizeWeather, weatherInfo, fuelStations, whatsappLink, qrSvg } from "./services.js?v=20261116";
-import { readWorkbook, parsePasted, PlanilhaError } from "./planilha.js?v=20261116";
-import { schedule, splitPath, vehicleAt, timelineSVG } from "./timeline.js?v=20261116";
+import { OSM, isCEP, lookupCEP, cepAddress, forecast, summarizeWeather, weatherInfo, fuelStations, whatsappLink, qrSvg } from "./services.js?v=20261116b";
+import { readWorkbook, parsePasted, PlanilhaError } from "./planilha.js?v=20261116b";
+import { schedule, splitPath, vehicleAt, timelineSVG } from "./timeline.js?v=20261116b";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -852,7 +852,7 @@ const EXEMPLO = [
 let EXEMPLOS = null;
 async function exemplos() {
   if (!EXEMPLOS) {
-    const m = await import("./exemplos.js?v=20261116");
+    const m = await import("./exemplos.js?v=20261116b");
     EXEMPLOS = [{
       id: "niteroi", title: "Exemplo da aula · Niterói", tag: "CVRP · 7 clientes",
       desc: "O exemplo do enunciado: 1 depósito na Escola de Engenharia e 7 clientes. Resolve em menos de 1 segundo.",
@@ -1784,9 +1784,9 @@ const anim = {
     if (G.ok) {
       this.veh = this.data.map((d, ri) => {
         const el = document.createElement("div");
-        el.className = "veh";
+        el.className = "car-mk";
         el.style.setProperty("--c", colorOf(ri));
-        el.innerHTML = `<span class="veh-b">${TRUCK}</span><b>${ri + 1}</b>`;
+        el.innerHTML = `<span class="car-b">${TRUCK}</span><b>${ri + 1}</b>`;
         return G.view.addVehicle({ lat: d.coords[0][0], lng: d.coords[0][1], el });
       });
     }
@@ -1865,7 +1865,11 @@ const anim = {
 };
 $("#tl-play").addEventListener("click", () => (anim.playing ? anim.pause() : anim.play()));
 $("#tl-reset").addEventListener("click", () => { anim.pause(); anim.started = false; anim.t = anim.t0; anim.draw(); });
-$("#tl-range").addEventListener("input", (e) => { anim.pause(); anim.seek(anim.t0 + (Number(e.target.value) / 1000) * (anim.t1 - anim.t0)); });
+$("#tl-range").addEventListener("input", (e) => {
+  const f = Number(e.target.value) / 1000; // ler antes de pausar: pause() redesenha o controle
+  anim.pause();
+  anim.seek(anim.t0 + f * (anim.t1 - anim.t0));
+});
 $("#tl-speed").addEventListener("change", (e) => { anim.dur = Number(e.target.value) || 40; });
 
 /* --------------------------------------------------------------------------

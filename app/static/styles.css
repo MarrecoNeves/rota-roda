@@ -454,17 +454,17 @@ body.dropping .drop-hint { display: grid; }
 .btn svg + * { margin-left: 0; }
 
 /* ---------- veículos animados no mapa ---------- */
-.veh { position: relative; width: 34px; height: 34px; pointer-events: none; transition: opacity .2s; }
-.lf-icon .veh { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); }
-.veh.g { transform: translateY(50%); }
-.veh-b { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; background: var(--c); border: 2.5px solid #fff; box-shadow: 0 3px 10px rgba(15, 23, 42, .45); }
-.veh-b svg { width: 19px; height: 19px; fill: none; stroke: #fff; stroke-width: 2; stroke-linejoin: round; }
-.veh b { position: absolute; right: -6px; top: -6px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: #0f172a; color: #fff; font: 700 10px/17px var(--font); text-align: center; border: 1.5px solid #fff; }
-.veh[data-phase="wait"] .veh-b { box-shadow: 0 0 0 4px rgba(220, 38, 38, .45), 0 3px 10px rgba(15, 23, 42, .45); animation: veh-pulse 1s ease-in-out infinite; }
-.veh[data-phase="service"] .veh-b { box-shadow: 0 0 0 4px rgba(22, 163, 74, .5), 0 3px 10px rgba(15, 23, 42, .45); }
-.veh[data-phase="depot"], .veh[data-phase="done"] { opacity: .85; }
-.veh.hide { opacity: 0; }
-@keyframes veh-pulse { 50% { box-shadow: 0 0 0 7px rgba(220, 38, 38, .15), 0 3px 10px rgba(15, 23, 42, .45); } }
+.car-mk { position: relative; width: 34px; height: 34px; pointer-events: none; transition: opacity .2s; }
+.lf-icon .car-mk { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); }
+.car-mk.g { transform: translateY(50%); }
+.car-b { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; background: var(--c); border: 2.5px solid #fff; box-shadow: 0 3px 10px rgba(15, 23, 42, .45); }
+.car-b svg { width: 19px; height: 19px; fill: none; stroke: #fff; stroke-width: 2; stroke-linejoin: round; }
+.car-mk b { position: absolute; right: -6px; top: -6px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: #0f172a; color: #fff; font: 700 10px/17px var(--font); text-align: center; border: 1.5px solid #fff; }
+.car-mk[data-phase="wait"] .car-b { box-shadow: 0 0 0 4px rgba(220, 38, 38, .45), 0 3px 10px rgba(15, 23, 42, .45); animation: car-pulse 1s ease-in-out infinite; }
+.car-mk[data-phase="service"] .car-b { box-shadow: 0 0 0 4px rgba(22, 163, 74, .5), 0 3px 10px rgba(15, 23, 42, .45); }
+.car-mk[data-phase="depot"], .car-mk[data-phase="done"] { opacity: .85; }
+.car-mk.hide { opacity: 0; }
+@keyframes car-pulse { 50% { box-shadow: 0 0 0 7px rgba(220, 38, 38, .15), 0 3px 10px rgba(15, 23, 42, .45); } }
 .map.animating .mk-pin { opacity: .45; transition: opacity .25s, box-shadow .25s; }
 .map.animating .mk.served .mk-pin { opacity: 1; box-shadow: 0 0 0 3px #16a34a, 0 3px 8px rgba(15, 23, 42, .35); }
 
@@ -520,4 +520,4 @@ body.has-tl .map-hint { display: none; }
   .tl-scroll { max-height: 30vh; }
 }
 @media print { .tl-dock, .anim-cta { display: none !important; } }
-@media (prefers-reduced-motion: reduce) { .veh[data-phase="wait"] .veh-b { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .car-mk[data-phase="wait"] .car-b { animation: none; } }
