@@ -1,0 +1,59 @@
+-22.9141415|-43.0944471|Rua João Batista|42|São Francisco
+-22.906017|-43.113461|Avenida Jornalista Alberto Francisco Torres|249|Icaraí
+-22.9012193|-43.1027681|Rua Domingues de Sá|425|Icaraí
+-22.9062181|-43.1011223|Rua Ministro Otávio Kelly|467|Icaraí
+-22.8979686|-43.0973595|Rua Doutor Sardinha|181|Santa Rosa
+-22.901816|-43.104550|Rua Professor Miguel Couto|374|Icaraí
+-22.9080898|-43.1112829|Avenida Jornalista Alberto Francisco Torres|355|Icaraí
+-22.8967903|-43.1066649|Rua Gastão Gonçalves|79|Santa Rosa
+-22.9030816|-43.1068222|Avenida Roberto Silveira|245|Icaraí
+-22.8975039|-43.1206646|Rua Padre Anchieta|112|Centro
+-22.906034|-43.111521|Rua Ator Paulo Gustavo|187|Icaraí
+-22.906147|-43.1092945|Rua Otávio Carneiro|106|Icaraí
+-22.9072632|-43.1055215|Rua Miguel Vieira Ferreira|147|Icaraí
+-22.898649|-43.1090254|Rua Doutor Paulo César|107|Icaraí
+-22.9019332|-43.1064404|Rua Ministro Otávio Kelly|157|Icaraí
+-22.9043224|-43.1008903|Avenida Sete de Setembro|221|Icaraí
+-22.9027275|-43.1113419|Rua General Pereira da Silva|155|Icaraí
+-22.9105084|-43.1096349|Avenida Jornalista Alberto Francisco Torres|483|Icaraí
+-22.9051597|-43.1199925|Avenida Jornalista Alberto Francisco Torres|25|Ingá
+-22.9045024|-43.1037854|Rua Ministro Otávio Kelly|338|Icaraí
+-22.9049611|-43.095854|Avenida Almirante Ary Parreiras|668|Vital Brazil
+-22.9033881|-43.1018506|Rua Doutor Leandro Mota|106|Icaraí
+-22.9084875|-43.1048993|Avenida Sete de Setembro|02|Icaraí
+-22.9009345|-43.1005844|Rua Santa Rosa|157|Santa Rosa
+-22.9098659|-43.1012529|Rua Lemos Cunha|577|Icaraí
+-22.899734|-43.1092959|Rua Mário Alves|2|Icaraí
+-22.9082164|-43.1099224|Rua Belisário Augusto|46|Icaraí
+-22.8983416|-43.104986|Rua Doutor Paulo César|285|Santa Rosa
+-22.9001413|-43.1092892|Avenida Roberto Silveira|29|Icaraí
+-22.907837|-43.111536|Avenida Jornalista Alberto Francisco Torres|347|Icaraí
+-22.903979|-43.105315|Rua Domingues de Sá|286|Icaraí
+-22.9017613|-43.1062877|Rua Lopes Trovão|318|Icaraí
+-22.9074117|-43.105763|Rua Gavião Peixoto|381|Icaraí
+-22.9009975|-43.1088411|Rua General Pereira da Silva|278|Icaraí
+-22.9004011|-43.104595|Rua Presidente João Pessoa|91|Icaraí
+-22.905118|-43.1196555|Avenida Jornalista Alberto Francisco Torres|39|Ingá
+-22.9051431|-43.1197978|Avenida Jornalista Alberto Francisco Torres|61|Ingá
+-22.9050381|-43.1193558|Avenida Jornalista Alberto Francisco Torres|57|Ingá
+-22.9032233|-43.1038017|Rua Nóbrega|160|Icaraí
+-22.906132|-43.1022332|Avenida Sete de Setembro|150|Icaraí
+-22.9047138|-43.1189646|Avenida Jornalista Alberto Francisco Torres|103|Ingá
+-22.9036635|-43.1105197|Rua Presidente Backer|155|Icaraí
+-22.8963589|-43.1196501|Rua Quinze de Novembro|185|Centro
+-22.8996715|-43.1025384|Rua Professor Miguel Couto|479|Santa Rosa
+-22.9051126|-43.1201405|Avenida Jornalista Alberto Francisco Torres|21|Ingá
+-22.8987316|-43.1061662|Rua Doutor Paulo César|235|Santa Rosa
+-22.9088552|-43.1091482|Rua Osvaldo Cruz|49|Icaraí
+-22.9023875|-43.1087482|Rua Presidente Backer|250|Icaraí
+-22.900642|-43.101853|Rua Domingues de Sá|463|Santa Rosa
+-22.903814|-43.102801|Rua Nóbrega|199|Icaraí
+-22.903964|-43.099266|Rua Vital Brasil Filho|23|Santa Rosa
+-22.901036|-43.104756|Rua Doutor Herotides de Oliveira|121|Icaraí
+-22.902886|-43.107923|Rua Lopes Trovão|237|Icaraí
+-22.892574|-43.099223|Rua Noronha Torrezão|327|Santa Rosa
+-22.902997|-43.099995|Avenida Sete de Setembro|291|Icaraí
+-22.893675|-43.100041|Rua Noronha Torrezão|255|Santa Rosa
+-22.902581|-43.124228|Rua Doutor Nilo Peçanha|99|Ingá
+-22.896941|-43.124051|Rua Quinze de Novembro|8|Centro
+-22.896902|-43.102574|Rua Itaguaí|148|Pé Pequeno

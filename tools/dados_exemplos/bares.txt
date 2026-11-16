@@ -1,0 +1,62 @@
+-22.948385|-43.193284|bar|Bar|Rua Marechal Francisco de Moura||Botafogo
+-22.976179|-43.189069|bar|Bar do Adão|Rua Aires Saldanha||Copacabana
+-22.955397|-43.196685|bar|Bar do Rock|Rua Voluntários da Pátria||Botafogo
+-22.980334|-43.197918|bar|Bar do Frango|Estrada do Cantagalo||Copacabana
+-22.981728|-43.190477|bar|Bar Bunda de Fora|Rua Sousa Lima||Copacabana
+-22.958403|-43.193409|bar|Bar do Russo|Rua Pinheiro Guimarães||Botafogo
+-22.963224|-43.175041|bar|Barbarella|Rua Ministro Viveiros de Castro|24|Copacabana
+-22.949151|-43.185901|pub|Bar do Italiano|Rua Bambina|180|Botafogo
+-22.950212|-43.181958|pub|Bar do Ovo|Praia de Botafogo|484|Botafogo
+-22.941951|-43.181112|pub|Bar Dafoca|Rua Farani||Botafogo
+-22.950924|-43.181950|restaurant|Bar Zuzu Goró|Rua Professor Álvaro Rodrigues|1 - Lj. 36|Botafogo
+-22.956045|-43.186262|restaurant|Bar Tero|Rua General Polidoro|192|Botafogo
+-22.950968|-43.182014|restaurant|Bar e Restaurante Pontes|Rua Professor Álvaro Rodrigues|1 Ljs 38 e 39|Botafogo
+-22.953869|-43.174357|restaurant|Bar do Manoel|Rua Lauro Müller||Botafogo
+-22.953357|-43.197533|restaurant|Bar do Belmiro|Rua Mário de Andrade||Humaitá
+-22.964463|-43.178691|restaurant|Bar do Adão Copacabana|Rua Duvivier|101|Copacabana
+-22.974994|-43.189702|restaurant|Barão de Copa|Rua Barão de Ipanema||Copacabana
+-22.981915|-43.190567|restaurant|Bardana|Rua Souza Lima|37|Copacabana
+-22.972092|-43.186765|restaurant|Barraca da Chiquita Copacabana|Rua Santa Clara||Copacabana
+-22.949158|-43.182473|restaurant|Boteco Esquina de Botafogo|Praia de Botafogo||Botafogo
+-22.972173|-43.186703|restaurant|Combinado Carioca Boteco|Rua Santa Clara||Copacabana
+-22.954216|-43.185313|restaurant|Restaurante Topázio|Rua Dezenove de Fevereiro|165|Botafogo
+-22.964264|-43.176932|restaurant|Restaurante Azumi|Rua Ministro Viveiros de Castro|127|Copacabana
+-22.956302|-43.196984|restaurant|Restaurante Tradição Imperial Botafogo|Rua General Dionísio|11|Humaitá
+-22.945715|-43.185461|restaurant|Restaurante La Bambina|Rua Bambina||Botafogo
+-22.950821|-43.181843|restaurant|Restaurante Senegal|Rua Voluntários da Pátria||Botafogo
+-22.972784|-43.189225|restaurant|Restaurante La Mole|Rua Dias da Rocha||Copacabana
+-22.967355|-43.182164|restaurant|Restaurante Novo|Rua República do Peru||Copacabana
+-22.954989|-43.175900|restaurant|Restaurante do Campinho|Rua do Campinho||Botafogo
+-22.942249|-43.180944|restaurant|Restaurante Pura Brasa|Praia de Botafogo||Botafogo
+-22.971076|-43.189288|restaurant|Potenza Bar e Restaurante|Rua Barata Ribeiro|560|Copacabana
+-22.951366|-43.182737|restaurant|Galeteria e Restaurante Botafogo|Rua Professor Álvaro Ramos|170c|Botafogo
+-22.949022|-43.184124|restaurant|Pizzaria Vezpa|Rua Muniz Barreto||Botafogo
+-22.975682|-43.188697|restaurant|Pizzaria Caravelle|Rua Domingos Ferreira|221|Copacabana
+-22.949450|-43.188195|restaurant|Ecco Pizzaria|Rua São Clemente|184|Botafogo
+-22.975907|-43.188271|restaurant|Cervejaria Devassa|Rua Bolívar|8|Copacabana
+-22.942603|-43.191477|restaurant|Glicerina - Café · Cervejaria · Galeria de arte|Rua General Glicério|445C|Laranjeiras
+-22.954568|-43.193058|pub|Itu Chopperia|Rua Voluntários da Pátria||Botafogo
+-22.957510|-43.197617|restaurant|Botequim|Rua Visconde de Caravelas|184|Humaitá
+-22.984022|-43.189243|pub|Botequim Carioca|Orla Copacabana||Copacabana
+-22.954754|-43.192550|pub|Botequim Paraízo|Rua Real Grandeza|167|Botafogo
+-22.963986|-43.174760|restaurant|Botequim do Léo|Avenida Prado Júnior||Copacabana
+-22.983096|-43.189418|pub|Botequim Carioca|Orla Copacabana||Copacabana
+-22.982498|-43.190253|pub|Hera bar e botequim|Avenida Atlântica|3806|Copacabana
+-22.974514|-43.187868|restaurant|Fagulha Grill e Pizza Copa|Rua Constante Ramos||Copacabana
+-22.955826|-43.197242|restaurant|Raro Bar e Grill|Rua Voluntários da Pátria|448 lj A|Humaitá
+-22.953521|-43.186307|restaurant|Planeta Grill|Rua Dezenove de Fevereiro|115|Botafogo
+-22.970230|-43.183548|restaurant|Siqueira Grill|Rua Siqueira Campos|16B|Copacabana
+-22.964738|-43.181016|restaurant|Ginger Mamut Bistrô-Bar|Rua Tonelero|217|Copacabana
+-22.964379|-43.172851|restaurant|S Bistrô - LEME|Avenida Atlântica||Leme
+-22.954583|-43.195330|restaurant|Cozi Bistro + Bar|Rua Conde de Irajá|247|Botafogo
+-22.965262|-43.177954|restaurant|LF Café & Bistro|Rua Duvivier||Copacabana
+-22.974624|-43.190007|restaurant|Casa do Barão|Rua Barão de Ipanema||Copacabana
+-22.984786|-43.193344|restaurant|Casa dos Marujos|Rua Bulhões de Carvalho||Ipanema
+-22.956479|-43.192588|restaurant|Casa Ueda|Rua Hans Staden||Botafogo
+-22.943460|-43.185271|restaurant|Casarão 1903|Rua Marquês de Olinda|94|Botafogo
+-22.960052|-43.172248|bar|Cantinho da china|Rua da Caixa d'água (NR)|13|Leme
+-22.976101|-43.189244|bar|Boteco da Garrafa|Rua Aires Saldanha||Copacabana
+-22.954701|-43.196438|restaurant|Domenica|Rua Capistrano de Abreu||Humaitá
+-22.975715|-43.188153|restaurant|Don Camillo|Avenida Atlântica||Copacabana
+-22.955338|-43.192355|restaurant|dainer|Rua Henrique de Novais||Botafogo
+-22.963495|-43.172638|restaurant|D'Amici|Rua Antônio Vieira||Leme

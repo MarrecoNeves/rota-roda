@@ -1,0 +1,58 @@
+-22.929342|-43.177538|Rua do Catete||Catete||22220-040||
+-22.931361|-43.17885|Largo do Machado||Catete||22221-020||
+-22.949549|-43.18504|Rua Nelson Mandela|100|Botafogo||22260-001|Rua Nelson Mandela, 100 Loja 101|
+-22.983704|-43.219752|Avenida Ataulfo de Paiva||Leblon||22440-032||
+-22.905765|-43.176413|Rua São José||Centro||20020-906||
+-22.923266|-43.248531|Rua Agenor Moreira||Andaraí||20560-032||
+-22.915653|-43.24615|Boulevard 28 de Setembro||Vila Isabel||20560-005||
+-22.912077|-43.176618|Rua do Passeio|40|Lapa||20021-290|Rua do Passeio, 40|
+-22.905791|-43.179578|Rua Sete de Setembro||Centro||20051-050||
+-22.984484|-43.197639|Rua Visconde de Pirajá||Ipanema||22410-000||
+-22.914466|-43.240111|Boulevard 28 de Setembro||Vila Isabel||20541-022||
+-22.903156|-43.178178|Rua do Rosário||Centro||20041-002||
+-22.944954|-43.182534|Praia de Botafogo|316|Botafogo||22250-040|Praia de Botafogo, 316 loja B/C|
+-22.952103|-43.186889|Rua Voluntários da Pátria||Botafogo||22280-030||
+-22.953976|-43.191159|Rua Voluntários da Pátria||Botafogo||22270-010|Rua Voluntários da Pátria|Botafogo
+-22.953048|-43.189331|Rua Voluntários da Pátria||Botafogo||22280-030||
+-22.965222|-43.218642|Rua Lopes Quintas||Jardim Botânico||22460-010||
+-22.984122|-43.190716|Rua Júlio de Castilhos||Copacabana||22081-025||
+-22.947904|-43.182708|Rua Professor Alfredo Gomes||Botafogo||22251-080||
+-22.904177|-43.286942|Rua Dias da Cruz|380|Méier||20720-012|Rua Dias da Cruz, 380|
+-22.984188|-43.223029|Avenida Bartolomeu Mitre||Leblon||22431-040||
+-22.984689|-43.200328|Rua Visconde de Pirajá|169|Ipanema||22410-001|Rua Visconde de Pirajá, 169|Ipanema
+-22.902139|-43.276472|Rua Carolina Méier||Méier||20780-000||
+-22.938053|-43.178034|Rua Marquês de Abrantes||Flamengo||22230-061||
+-22.954603|-43.193166|Rua Voluntários da Pátria||Botafogo||22270-080|Rua Voluntários da Pátria|
+-22.915506|-43.243468|Boulevard 28 de Setembro||Vila Isabel||20551-080||
+-22.900193|-43.224587|Rua São Luiz Gonzaga||São Cristóvão||20910-060||
+-22.900245|-43.224664|Rua São Luiz Gonzaga||São Cristóvão||20910-060|Rua São Luiz Gonzaga|
+-22.915083|-43.187884|Rua Riachuelo|217|Centro||20230-011|Rua Riachuelo, 217|Centro
+-22.927557|-43.244159|Rua Uruguai||Andaraí||20510-260||
+-22.991941|-43.251664|Via Ápia|41|Rocinha||22451-540|Via Ápia, 41|Rocinha
+-22.923624|-43.232343|Rua Conde de Bonfim|334|Tijuca||20520-054|Rua Conde de Bonfim, 334|Tijuca
+-22.925534|-43.234969|Rua Conde de Bonfim|436|Tijuca||20520-054|Rua Conde de Bonfim, 436 - lj - sobrado|Tijuca
+-22.906734|-43.177281|Avenida Rio Branco|156|Centro||20043-900||
+-22.93721|-43.175677|Rua Senador Vergueiro|138|Flamengo||22230-030|Rua Senador Vergueiro, 138|Flamengo
+-22.920443|-43.176954|Rua Benjamin Constant||Glória||20241-150||
+-22.96199|-43.207889|Praça Sagrada Família||Lagoa||22470-201||
+-22.984515|-43.203288|Rua Visconde de Pirajá||Ipanema||22411-010||
+-22.983895|-43.219041|Avenida Ataulfo de Paiva||Leblon||22440-032||
+-22.931254|-43.178044|Largo do Machado||Catete||22220-901||
+-22.888129|-43.275829|Rua Cachambi|375|Cachambi||20775-181|Rua Cachambi, 375|Cachambi
+-22.938249|-43.191634|Rua das Laranjeiras||Laranjeiras||22240-005|Rua das Laranjeiras|Laranjeiras
+-22.922973|-43.264981|Praça Edmundo Rego|17|Grajaú||20561-130|Praça Edmundo Rego, 17|Grajaú
+-22.90293|-43.110734|Rua Gavião Peixoto|115|Icaraí|Niterói|24220-030|Rua Gavião Peixoto, 115|Icaraí
+-22.90417|-43.109353|Rua Gavião Peixoto|191|Icaraí|Niterói|24220-070|Rua Gavião Peixoto, 191|
+-22.898286|-43.104077|Rua Mangaratiba||Pé Pequeno|Niterói|24240-185||
+-22.901143|-43.113057|Rua Gavião Peixoto||Icaraí|Niterói|24220-020||
+-22.894494|-43.118994|Rua da Conceição||Centro|Niterói|24020-086||
+-22.904758|-43.109172|Rua Gavião Peixoto||Icaraí|Niterói|24230-102||
+-22.901802|-43.122157|Rua Doutor Paulo Alves||Ingá|Niterói|24210-445|Rua Doutor Paulo Alves|Ingá
+-22.902683|-43.114791|Rua Ator Paulo Gustavo|78|Icaraí|Niterói|24230-060|Rua Ator Paulo Gustavo, 78|Icaraí
+-22.90953|-43.108075|Rua Ator Paulo Gustavo||Icaraí|Niterói|24230-063||
+-22.893953|-43.122403|Rua Visconde de Uruguai||Centro|Niterói|24020-082||
+-22.903519|-43.112194|Rua General Pereira da Silva||Icaraí|Niterói|24220-030||
+-22.90454|-43.105724|Avenida Roberto Silveira||Icaraí|Niterói|24230-161||
+-22.89451|-43.119726|Rua da Conceição|164|Centro|Niterói|24020-081|Rua da Conceição, 164|Centro
+-22.903835|-43.123006|Rua Presidente Pedreira||Ingá|Niterói|24210-431||
+-22.898902|-43.105555|Rua Doutor Paulo César||Pé Pequeno|Niterói|24240-000||
