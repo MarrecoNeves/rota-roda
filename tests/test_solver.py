@@ -171,3 +171,17 @@ def test_clarke_wright_viavel():
     h = clarke_wright(points, vt, dist, tmat, opt)
     assert h["feasible"]
     check_solution(h["routes"], points, vt, dist, tmat, opt)
+
+
+def test_tempos_dos_trechos_para_a_linha_do_tempo():
+    p = pts()
+    d, t = matrices(p)
+    vt = [VehicleType("Van", 300, 2, 1.0, 0.0, 0)]
+    for opt in (Options(True, False, 20), Options(False, False, 20)):
+        exact, _ = solve(p, vt, d, t, opt)
+        for r in exact["routes"]:
+            seq = [r.depot] + r.stops + ([r.depot] if opt.return_to_depot else [])
+            assert len(r.legs) == len(seq) - 1
+            assert r.legs == [round(t[a][b], 2) for a, b in zip(seq, seq[1:])]
+            # sem janelas: inicio de cada atendimento = soma dos trechos ate ali
+            assert abs(r.arrivals[0] - r.legs[0]) < 0.02
