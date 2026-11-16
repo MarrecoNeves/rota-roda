@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css?v=20261008">
+  <link rel="stylesheet" href="/static/styles.css?v=20261116">
 </head>
 <body>
   <a class="skip-link" href="#painel">Pular para o painel</a>
@@ -54,9 +54,9 @@
           </div>
 
           <div class="toolbar">
-            <button type="button" class="btn btn-ghost" id="btn-exemplo">
+            <button type="button" class="btn btn-ghost btn-ex" id="btn-exemplo" title="Carregar um exemplo pronto: o da aula ou um dos 3 casos com ~50 endereços reais">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-              Exemplo Niterói
+              Exemplos <span class="ex-badge">4</span>
             </button>
             <button type="button" class="btn btn-ghost" id="btn-colar" title="Colar uma lista de endereços, um por linha">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6v3H9zM7 5H5v16h14V5h-2M8 12h8M8 16h5"/></svg>
@@ -66,7 +66,7 @@
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/></svg>
               Importar planilha
             </button>
-            <a class="btn btn-ghost" href="/static/modelo_pontos.xlsx?v=20261008" download="Rota Roda - modelo de pontos.xlsx" title="Baixar a planilha-modelo para preencher">
+            <a class="btn btn-ghost" href="/static/modelo_pontos.xlsx?v=20261116" download="Rota Roda - modelo de pontos.xlsx" title="Baixar a planilha-modelo para preencher">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 10h16M10 4v16"/></svg>
               Baixar modelo
             </a>
@@ -99,7 +99,7 @@
           <ol class="points" id="lista-pontos" aria-live="polite"></ol>
           <div class="empty" id="vazio-pontos">
             <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 43s-13-10.4-13-20.5a13 13 0 0 1 26 0C37 32.6 24 43 24 43z"/><circle cx="24" cy="22.5" r="4.5"/></svg>
-            <p><strong>Nenhum ponto ainda.</strong><br>Busque um endereço acima, clique no mapa ou carregue o exemplo de Niterói.</p>
+            <p><strong>Nenhum ponto ainda.</strong><br>Busque um endereço acima, clique no mapa ou abra os <strong>Exemplos</strong>: o da aula e três casos reais com 50 clientes.</p>
           </div>
         </section>
 
@@ -168,6 +168,41 @@
         <div class="map-layers" id="camadas" hidden></div>
         <div class="map-legend" id="legenda" hidden></div>
       </div>
+      <section class="tl-dock" id="tl-dock" aria-label="Animação e linha do tempo das rotas" hidden>
+        <div class="tl-bar">
+          <button type="button" class="tl-play" id="tl-play" aria-label="Animar as rotas" title="Animar as rotas"></button>
+          <span class="tl-clock" id="tl-clock" aria-live="off">08:00</span>
+          <input type="range" id="tl-range" min="0" max="1000" value="0" aria-label="Horário da simulação">
+          <button type="button" class="icon-btn" id="tl-reset" title="Voltar todos ao depósito" aria-label="Voltar todos ao depósito"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/></svg></button>
+          <label class="sr-only" for="tl-speed">Velocidade</label>
+          <select id="tl-speed" class="select-sm tl-speed" title="Duração da animação">
+            <option value="90">Lenta</option>
+            <option value="40" selected>Normal</option>
+            <option value="15">Rápida</option>
+          </select>
+          <span class="tl-status muted small" id="tl-status"></span>
+          <button type="button" class="btn btn-ghost btn-sm tl-toggle" id="tl-toggle" aria-expanded="false" aria-controls="tl-body">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+            Linha do tempo <span class="chev" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="tl-body" id="tl-body" hidden>
+          <div class="tl-head">
+            <label class="sr-only" for="tl-route">Rota</label>
+            <select id="tl-route" class="select-sm"></select>
+            <p class="tl-sub small" id="tl-sub"></p>
+          </div>
+          <div class="tl-scroll" id="tl-svg"></div>
+          <ul class="tl-legend small" aria-label="Legenda">
+            <li><i class="lg-tw"></i>janela de tempo</li>
+            <li><i class="lg-arr">×</i>chegada</li>
+            <li><i class="lg-wait"></i>espera</li>
+            <li><i class="lg-start"></i>início do atendimento</li>
+            <li><i class="lg-svc"></i>atendimento</li>
+            <li><i class="lg-travel"></i>deslocamento</li>
+          </ul>
+        </div>
+      </section>
       <div class="map-hint" id="map-hint">Clique no mapa para adicionar um ponto · arraste um marcador para ajustar</div>
     </section>
   </div>
@@ -210,6 +245,18 @@ Rua Presidente Backer, 337, Icaraí, Niterói - RJ; 100
     </div>
   </dialog>
 
+  <dialog class="qr-dialog ex-dialog" id="ex-dialog" aria-labelledby="ex-title">
+    <div class="ex-top">
+      <div>
+        <h2 id="ex-title">Exemplos prontos</h2>
+        <p class="muted small">Os três casos usam <strong>endereços reais</strong> tirados do OpenStreetMap. Demandas, horários e frota são ilustrativos, pensados para cada tipo de operação.</p>
+      </div>
+      <button type="button" class="icon-btn" id="ex-close" aria-label="Fechar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+    <p class="note" id="ex-warn" hidden>Carregar um exemplo substitui os pontos e a frota atuais.</p>
+    <ul class="ex-list" id="ex-list"></ul>
+  </dialog>
+
   <dialog class="qr-dialog" id="qr-dialog" aria-labelledby="qr-title">
     <form method="dialog">
       <h2 id="qr-title">Rota</h2>
@@ -234,6 +281,6 @@ Rua Presidente Backer, 337, Icaraí, Niterói - RJ; 100
     </div>
   </div>
 
-  <script src="/static/app.js?v=20261008" type="module"></script>
+  <script src="/static/app.js?v=20261116" type="module"></script>
 </body>
 </html>

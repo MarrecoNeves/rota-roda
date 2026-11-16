@@ -2,8 +2,9 @@
    Rota Roda — front-end (OpenStreetMap ou Google Maps + API FastAPI/VRPSolverEasy)
    ========================================================================== */
 
-import { OSM, isCEP, lookupCEP, cepAddress, forecast, summarizeWeather, weatherInfo, fuelStations, whatsappLink, qrSvg } from "./services.js?v=20261008";
-import { readWorkbook, parsePasted, PlanilhaError } from "./planilha.js?v=20261008";
+import { OSM, isCEP, lookupCEP, cepAddress, forecast, summarizeWeather, weatherInfo, fuelStations, whatsappLink, qrSvg } from "./services.js?v=20261116";
+import { readWorkbook, parsePasted, PlanilhaError } from "./planilha.js?v=20261116";
+import { schedule, splitPath, vehicleAt, timelineSVG } from "./timeline.js?v=20261116";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -22,6 +23,9 @@ const TRUCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3
 const PLUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
 const WHATS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/><path d="M9 9.5c.3 2 2.2 4.1 4.5 4.8l1.2-1.1 1.8.8-.4 1.6c-3.6.4-7.6-3.4-7.3-7l1.6-.4.8 1.8z"/></svg>';
 const QRICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>';
+const CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
+const PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>';
+const PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13M16 5.5v13" stroke-width="3.2"/></svg>';
 const PIN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
 
 /* --------------------------------------------------------------------------
@@ -114,7 +118,7 @@ async function api(path, body, timeout = 60000) {
    • OpenStreetMap + Leaflet (padrão, 100% gratuito, sem chave)
    • Google Maps (opcional, quando existe GOOGLE_MAPS_BROWSER_KEY)
    -------------------------------------------------------------------------- */
-const G = { ok: false, provider: "none", view: null, markers: new Map(), routes: [], hidden: new Set(), placesLib: null, geocoder: null };
+const G = { ok: false, provider: "none", view: null, markers: new Map(), routes: [], paths: [], hidden: new Set(), placesLib: null, geocoder: null };
 
 // Decodifica polylines no formato do Google (o OSRM usa o mesmo formato, precisão 5)
 function decodePolyline(str, precision = 5) {
@@ -197,6 +201,11 @@ const LeafletView = {
       },
     };
   },
+  addVehicle(o) {
+    const icon = L.divIcon({ html: o.el, className: "lf-icon", iconSize: [0, 0], iconAnchor: [0, 0] });
+    const m = L.marker([o.lat, o.lng], { icon, interactive: false, keyboard: false, zIndexOffset: 3000 }).addTo(this.map);
+    return { el: o.el, move: (a, b) => m.setLatLng([a, b]), remove: () => m.remove() };
+  },
   fit(pts, pad) {
     if (pts.length === 1) this.map.setView(pts[0], 16);
     else this.map.fitBounds(L.latLngBounds(pts), { padding: [pad, pad] });
@@ -262,6 +271,11 @@ const GoogleView = {
         line.set("icons", icons);
       },
     };
+  },
+  addVehicle(o) {
+    o.el.classList.add("g");
+    const m = new this.Adv({ map: this.map, position: { lat: o.lat, lng: o.lng }, content: o.el, zIndex: 3000 });
+    return { el: o.el, move: (a, b) => { m.position = { lat: a, lng: b }; }, remove: () => (m.map = null) };
   },
   fit(pts, pad) {
     if (pts.length === 1) { this.map.setCenter({ lat: pts[0][0], lng: pts[0][1] }); this.map.setZoom(16); return; }
@@ -369,6 +383,8 @@ function renderMap(fit = false) {
   G.markers.clear();
   G.routes.forEach((r) => r.remove());
   G.routes = [];
+  G.paths = [];
+  anim.removeVehicles();
 
   const showResult = state.step === 3 && state.result;
   const byPoint = showResult ? routeIndexByPoint() : new Map();
@@ -403,6 +419,7 @@ function renderMap(fit = false) {
   if (showResult) pts.push(...drawRoutes());
   if (fit && pts.length) G.view.fit(pts, 60);
   renderLegend();
+  if (showResult) anim.attach(); else anim.detach();
 }
 
 function drawRoutes() {
@@ -420,6 +437,7 @@ function drawRoutes() {
     h.ri = ri;
     if (G.hidden.has(ri)) h.style("hidden");
     G.routes.push(h);
+    G.paths[ri] = path;
     all.push(...path);
   });
   return all;
@@ -830,19 +848,71 @@ const EXEMPLO = [
   { name: "Tenente Osório, 30", address: "Rua Tenente Osório, 30 - Fonseca, Niterói - RJ", lat: -22.88286, lng: -43.10438, demand: 60 },
 ];
 
+/* ---- exemplos: Niterói (aula) + 3 casos com endereços reais (OpenStreetMap) ---- */
+let EXEMPLOS = null;
+async function exemplos() {
+  if (!EXEMPLOS) {
+    const m = await import("./exemplos.js?v=20261116");
+    EXEMPLOS = [{
+      id: "niteroi", title: "Exemplo da aula · Niterói", tag: "CVRP · 7 clientes",
+      desc: "O exemplo do enunciado: 1 depósito na Escola de Engenharia e 7 clientes. Resolve em menos de 1 segundo.",
+      stats: ["7 clientes", "2 vans de 300", "sem janelas"],
+      points: EXEMPLO.map((p) => ({ service: 5, ...p })),
+      fleet: [{ name: "Van", capacity: 300, qty: 2, costKm: 1, fixedCost: 0 }],
+      opts: { useTW: false, dayStart: "08:00", dayEnd: "18:00", timeLimit: 30, returnToDepot: true },
+      refine: true,
+    }, ...m.CASOS];
+  }
+  return EXEMPLOS;
+}
+
+const exDlg = $("#ex-dialog");
 $("#btn-exemplo").addEventListener("click", async () => {
-  if (state.points.length && !confirmInline($("#btn-exemplo"), "Substituir pontos atuais?")) return;
-  state.points = EXEMPLO.map((p) => ({ id: uid(), service: 5, twStart: state.opts.dayStart, twEnd: state.opts.dayEnd, ...p }));
-  state.fleet = [];
+  let list;
+  try { list = await exemplos(); } catch { toast("Não foi possível carregar os exemplos.", true); return; }
+  $("#ex-list").innerHTML = list.map((e) => `
+    <li><button type="button" class="ex-card" data-ex="${e.id}" style="--c:${e.color || "var(--brand)"}">
+      <span class="ex-ic" aria-hidden="true">${e.icon || PIN}</span>
+      <span class="ex-main">
+        <span class="ex-tag">${esc(e.tag)}</span>
+        <strong>${esc(e.title)}</strong>
+        <span class="ex-desc">${esc(e.desc)}</span>
+        <span class="ex-stats">${e.stats.map((t) => `<span>${esc(t)}</span>`).join("")}</span>
+      </span>
+    </button></li>`).join("");
+  $("#ex-warn").hidden = !state.points.length;
+  exDlg.showModal();
+});
+$("#ex-close").addEventListener("click", () => exDlg.close());
+$("#ex-list").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-ex]");
+  if (!b) return;
+  const ex = (await exemplos()).find((x) => x.id === b.dataset.ex);
+  exDlg.close();
+  if (ex) loadExample(ex);
+});
+
+function loadExample(ex) {
+  Object.assign(state.opts, ex.opts);
+  state.points = ex.points.map((p) => ({
+    id: uid(), service: 0, demand: 0, isDepot: false,
+    twStart: state.opts.dayStart, twEnd: state.opts.dayEnd, ...p,
+  }));
+  const depId = state.points.find((p) => p.isDepot)?.id;
+  state.fleet = ex.fleet.map((v) => ({ id: uid(), depotId: depId, ...v }));
   changed();
-  ensureFleet();
-  state.fleet[0] = { ...state.fleet[0], name: "Van", capacity: 300, qty: 2, costKm: 1, fixedCost: 0 };
-  save();
+  $("#usar-tw").checked = state.opts.useTW;
+  $("#jornada-ini").value = state.opts.dayStart;
+  $("#jornada-fim").value = state.opts.dayEnd;
+  $("#tw-box").open = state.opts.useTW;
+  renderTWSummary();
+  if (state.step !== 1) goto(1);
   renderPoints();
   renderMap(true);
-  toast("Exemplo carregado: 1 depósito e 7 clientes em Niterói.");
-  refineExample(state.points.map((p) => p.id));
-});
+  updateFooter();
+  toast(`${ex.title}: ${customers().length} clientes carregados. Confira a frota e clique em Calcular rotas.`);
+  if (ex.refine) refineExample(state.points.map((p) => p.id));
+}
 
 // Refina em segundo plano as coordenadas do exemplo pelo geocodificador do servidor
 // (Google com chave; OpenStreetMap sem chave). Só aceita resultados a menos de 2 km do ponto embutido.
@@ -1194,7 +1264,7 @@ function goto(step) {
     $("#perfil-hint").hidden = ors;
   }
   if (step === 3) renderResult();
-  if (step !== 3) G.hidden.clear();
+  if (step !== 3) { G.hidden.clear(); tl.hide(); }
   $(".panel-body").scrollTop = 0;
   updateFooter();
   renderMap(step === 3);
@@ -1363,11 +1433,17 @@ function renderResult() {
     ${(res.notes || []).map((n) => `<p class="note">${esc(n)}</p>`).join("")}
     <section class="weather" id="clima" aria-live="polite"><p class="cmp-meta">Consultando o clima nos horários das rotas…</p></section>
 
+    <div class="anim-cta">
+      <button type="button" class="btn btn-primary btn-sm" data-anim="play">${PLAY} Animar as rotas</button>
+      <button type="button" class="btn btn-ghost btn-sm" data-tl="0">${CLOCK} Linha do tempo</button>
+      <span class="muted small">Os veículos saem do depósito, atendem cada parada no horário previsto e voltam.</span>
+    </div>
     <h3 class="list-title spaced">Rotas <span class="count">${ex.routes.length}</span></h3>
     <ol class="routes">
       ${ex.routes.map((r, ri) => {
         const dep = P(r.depot);
         const links = mapsLinks(r, res);
+        const sch = routeSchedule(r, res);
         const loadPct = r.capacity ? (r.load / r.capacity) * 100 : 0;
         return `<li class="route" data-ri="${ri}" style="--c:${colorOf(ri)}">
           <div class="route-head">
@@ -1381,9 +1457,9 @@ function renderResult() {
           <details>
             <summary>Sequência de entregas <span class="chev" aria-hidden="true"></span></summary>
             <ol class="stops">
-              <li class="stop dep"><span class="stop-n">${HOUSE.replace("<svg", '<svg width="11" height="11" fill="currentColor"')}</span><span><span class="stop-name">${esc(dep.name)}</span><br><span class="stop-addr">Saída</span></span><span class="stop-t">${fmtClock(start)}</span></li>
-              ${r.stops.map((s, k) => { const p = P(s); const late = res.opts.useTW ? ` · janela ${esc(p.twStart)}–${esc(p.twEnd)}` : ""; return `<li class="stop"><span class="stop-n">${k + 1}</span><span><span class="stop-name">${esc(p.name)}</span><br><span class="stop-addr">${esc(p.address)} · ${nf().format(p.demand)} un.${late}</span></span><span class="stop-t">${fmtClock(start + r.arrivals[k])}</span></li>`; }).join("")}
-              ${res.opts.returnToDepot ? `<li class="stop dep"><span class="stop-n">${HOUSE.replace("<svg", '<svg width="11" height="11" fill="currentColor"')}</span><span><span class="stop-name">${esc(dep.name)}</span><br><span class="stop-addr">Retorno</span></span><span class="stop-t">${fmtClock(start + r.time_min)}</span></li>` : ""}
+              <li class="stop dep"><span class="stop-n">${HOUSE.replace("<svg", '<svg width="11" height="11" fill="currentColor"')}</span><span><span class="stop-name">${esc(dep.name)}</span><br><span class="stop-addr">Saída${sch.shift ? ` · ajustada para não esperar à toa` : ""}</span></span><span class="stop-t">${fmtClock(start + sch.depart)}</span></li>
+              ${r.stops.map((s, k) => { const p = P(s); const late = res.opts.useTW ? ` · janela ${esc(p.twStart)}–${esc(p.twEnd)}` : ""; return `<li class="stop"><span class="stop-n">${k + 1}</span><span><span class="stop-name">${esc(p.name)}</span><br><span class="stop-addr">${esc(p.address)} · ${nf().format(p.demand)} un.${late}</span></span><span class="stop-t">${fmtClock(start + sch.items[k].start)}</span></li>`; }).join("")}
+              ${res.opts.returnToDepot ? `<li class="stop dep"><span class="stop-n">${HOUSE.replace("<svg", '<svg width="11" height="11" fill="currentColor"')}</span><span><span class="stop-name">${esc(dep.name)}</span><br><span class="stop-addr">Retorno</span></span><span class="stop-t">${fmtClock(start + (sch.back ?? r.time_min))}</span></li>` : ""}
             </ol>
           </details>
           <div class="route-actions">
@@ -1391,6 +1467,7 @@ function renderResult() {
             <a class="btn btn-ghost btn-sm" href="${esc(whatsappLink(routeMessage(r, ri, res)))}" target="_blank" rel="noopener">${WHATS} WhatsApp</a>
             <button type="button" class="btn btn-ghost btn-sm" data-qr="${ri}">${QRICON} QR code</button>
             ${G.ok ? `<button type="button" class="btn btn-ghost btn-sm" data-focus="${ri}">Ver no mapa</button>` : ""}
+            <button type="button" class="btn btn-ghost btn-sm" data-tl="${ri}">${CLOCK} Linha do tempo</button>
           </div>
         </li>`;
       }).join("")}
@@ -1438,6 +1515,7 @@ function renderResult() {
   $("#btn-json").addEventListener("click", () => download(new Blob([JSON.stringify(res, null, 2)], { type: "application/json" }), "rotas.json"));
   $("#btn-nova-2").addEventListener("click", (e) => novaRoteirizacao(e.currentTarget));
   loadWeather(res);
+  tl.render();
 }
 
 /* ---- clima nas rotas (Open-Meteo) ---- */
@@ -1479,8 +1557,9 @@ function routeMessage(r, ri, res) {
   const ptById = new Map(res.points.map((p) => [p.id, p]));
   const P = (i) => ptById.get(res.pointIds[i]);
   const start = toMin(res.opts.dayStart);
-  const lines = [`*Rota ${ri + 1} · ${r.vehicle_name}* (Rota Roda)`, `Saída: ${P(r.depot).name} às ${fmtClock(start)}`];
-  r.stops.forEach((s, k) => { const p = P(s); lines.push(`${k + 1}. ${p.name} (${nf().format(p.demand)} un.) ~${fmtClock(start + r.arrivals[k])}`); });
+  const sch = routeSchedule(r, res);
+  const lines = [`*Rota ${ri + 1} · ${r.vehicle_name}* (Rota Roda)`, `Saída: ${P(r.depot).name} às ${fmtClock(start + sch.depart)}`];
+  r.stops.forEach((s, k) => { const p = P(s); lines.push(`${k + 1}. ${p.name} (${nf().format(p.demand)} un.) ~${fmtClock(start + sch.items[k].start)}`); });
   lines.push(`Total: ${nf(1).format(r.dist_km)} km · ${fmtDur(r.time_min)}`);
   lines.push(`Navegação: ${mapsLinks(r, res)[0]}`);
   return lines.join("\n");
@@ -1503,6 +1582,9 @@ $("#resultado").addEventListener("click", (e) => {
   if (f) focusRoute(Number(f.dataset.focus));
   const q = e.target.closest("[data-qr]");
   if (q) showQR(Number(q.dataset.qr)).catch(() => toast("Não foi possível gerar o QR code.", true));
+  const t = e.target.closest("[data-tl]");
+  if (t) tl.open(Number(t.dataset.tl));
+  if (e.target.closest("[data-anim]")) { tl.open(tl.ri, false); anim.play(true); }
 });
 $("#resultado").addEventListener("mouseover", (e) => {
   const r = e.target.closest(".route");
@@ -1516,6 +1598,7 @@ $("#legenda").addEventListener("click", (e) => {
   if (G.hidden.has(ri)) G.hidden.delete(ri); else G.hidden.add(ri);
   b.setAttribute("aria-pressed", String(!G.hidden.has(ri)));
   setRouteEmphasis(null);
+  anim.draw();
 });
 
 function download(blob, name) {
@@ -1548,13 +1631,14 @@ async function exportExcel() {
       ["Tempo do solver (s)", res.exact.time_s],
       ["Fonte das distâncias", SOURCE_TXT[res.matrix.source]?.[0] || res.matrix.source],
     ];
-    const rotas = [["Rota", "Veículo", "Ordem", "Ponto", "Endereço", "Demanda", "Carga acumulada", "Chegada prevista", "Latitude", "Longitude"]];
+    const rotas = [["Rota", "Veículo", "Ordem", "Ponto", "Endereço", "Demanda", "Carga acumulada", "Chegada prevista", "Espera (min)", "Início do atendimento", "Fim do atendimento", "Latitude", "Longitude"]];
     res.exact.routes.forEach((r, ri) => {
       const d = P(r.depot);
-      rotas.push([ri + 1, r.vehicle_name, 0, d.name, d.address, 0, 0, fmtClock(start), d.lat, d.lng]);
+      const sch = routeSchedule(r, res);
+      rotas.push([ri + 1, r.vehicle_name, 0, d.name, d.address, 0, 0, fmtClock(start + sch.depart), "", "", "", d.lat, d.lng]);
       let acc = 0;
-      r.stops.forEach((s, k) => { const p = P(s); acc += Number(p.demand); rotas.push([ri + 1, r.vehicle_name, k + 1, p.name, p.address, Number(p.demand), acc, fmtClock(start + r.arrivals[k]), p.lat, p.lng]); });
-      if (res.opts.returnToDepot) rotas.push([ri + 1, r.vehicle_name, r.stops.length + 1, d.name, d.address, 0, acc, fmtClock(start + r.time_min), d.lat, d.lng]);
+      r.stops.forEach((s, k) => { const p = P(s); const it = sch.items[k]; acc += Number(p.demand); rotas.push([ri + 1, r.vehicle_name, k + 1, p.name, p.address, Number(p.demand), acc, fmtClock(start + it.arrive), Math.round(it.wait), fmtClock(start + it.start), fmtClock(start + it.end), p.lat, p.lng]); });
+      if (res.opts.returnToDepot) rotas.push([ri + 1, r.vehicle_name, r.stops.length + 1, d.name, d.address, 0, acc, fmtClock(start + (sch.back ?? r.time_min)), "", "", "", d.lat, d.lng]);
     });
     const porRota = [["Rota", "Veículo", "Paradas", "Carga", "Capacidade", "Distância (km)", "Tempo (min)", "Custo (R$)"]]
       .concat(res.exact.routes.map((r, ri) => [ri + 1, r.vehicle_name, r.stops.length, r.load, r.capacity, r.dist_km, r.time_min, r.cost]));
@@ -1567,6 +1651,222 @@ async function exportExcel() {
     toast("Não foi possível gerar o Excel: " + err.message, true);
   }
 }
+
+
+/* --------------------------------------------------------------------------
+   Linha do tempo das rotas (Route Timeline) + animação dos veículos
+   -------------------------------------------------------------------------- */
+const SCHED = new WeakMap();
+function schedOpts(res) {
+  return { returnToDepot: res.opts.returnToDepot, useTW: res.opts.useTW, horizon: Math.max(1, toMin(res.opts.dayEnd) - toMin(res.opts.dayStart)) };
+}
+// Agenda de cada rota: chegada, espera, início e fim do atendimento. Com janelas de tempo,
+// o veículo sai o mais tarde possível sem perder nenhuma janela (só sobra espera inevitável).
+function routeSchedule(r, res) {
+  if (SCHED.has(r)) return SCHED.get(r);
+  const ptById = new Map(res.points.map((p) => [p.id, p]));
+  const start = toMin(res.opts.dayStart);
+  const nodes = r.stops.map((s) => {
+    const p = ptById.get(res.pointIds[s]);
+    return res.opts.useTW
+      ? { service: Number(p.service) || 0, twA: toMin(p.twStart) - start, twB: toMin(p.twEnd) - start }
+      : { service: 0, twA: null, twB: null };
+  });
+  const sch = schedule(r, nodes, schedOpts(res));
+  SCHED.set(r, sch);
+  return sch;
+}
+function routeCoords(r, res) {
+  const ptById = new Map(res.points.map((p) => [p.id, p]));
+  const seq = [r.depot, ...r.stops, ...(res.opts.returnToDepot ? [r.depot] : [])];
+  return seq.map((i) => { const p = ptById.get(res.pointIds[i]); return [p.lat, p.lng]; });
+}
+
+const tl = {
+  ri: 0,
+  geo: null,
+  dock: $("#tl-dock"),
+  render() {
+    const res = state.result;
+    if (!(res && state.step === 3 && res.exact.routes.length)) { this.hide(); return; }
+    this.dock.hidden = false;
+    document.body.classList.add("has-tl");
+    if (this.ri >= res.exact.routes.length) this.ri = 0;
+    $("#tl-route").innerHTML = res.exact.routes.map((r, ri) => `<option value="${ri}">Rota ${ri + 1} · ${esc(r.vehicle_name)} · ${r.stops.length} paradas</option>`).join("");
+    $("#tl-route").value = String(this.ri);
+    this.draw();
+    anim.ui();
+  },
+  draw() {
+    const res = state.result;
+    if (!res || $("#tl-body").hidden) return;
+    const r = res.exact.routes[this.ri];
+    if (!r) return;
+    const sch = routeSchedule(r, res);
+    const ptById = new Map(res.points.map((p) => [p.id, p]));
+    const names = [ptById.get(res.pointIds[r.depot]).name, ...r.stops.map((s) => ptById.get(res.pointIds[s]).name)];
+    const start = toMin(res.opts.dayStart);
+    const box = $("#tl-svg");
+    const out = timelineSVG(sch, {
+      names, color: colorOf(this.ri), clock: (m) => fmtClock(start + m), offset: start,
+      useTW: res.opts.useTW, horizon: schedOpts(res).horizon,
+      width: Math.max(560, box.clientWidth - 4), now: anim.started ? anim.t : null,
+    });
+    box.innerHTML = out.svg;
+    this.geo = out;
+    const wait = sch.items.reduce((a, it) => a + it.wait, 0);
+    const svc = sch.items.reduce((a, it) => a + it.service, 0);
+    const drive = sch.legs.reduce((a, b) => a + b, 0);
+    $("#tl-sub").innerHTML = `<b style="color:${colorOf(this.ri)}">Rota ${this.ri + 1}</b> · sai ${fmtClock(start + sch.depart)} · volta ${fmtClock(start + sch.finish)}
+      · <span>${fmtDur(drive)} dirigindo</span> · <span>${fmtDur(svc)} atendendo</span> · <span class="${wait > 0.5 ? "w" : ""}">${fmtDur(wait)} de espera</span>
+      ${sch.shift ? `<br><span class="muted">O veículo sai ${fmtDur(sch.shift)} depois do início da jornada: é o mais tarde possível sem perder nenhuma janela, então só sobra a espera que não dá para evitar.</span>` : ""}`;
+  },
+  cursor() {
+    const ln = $("#tl-svg .tl-now");
+    if (!ln || !this.geo) return;
+    if (!anim.started) { ln.style.display = "none"; return; }
+    const t = Math.min(this.geo.t1, Math.max(this.geo.t0, anim.t));
+    const xx = this.geo.x(t);
+    ln.setAttribute("x1", xx); ln.setAttribute("x2", xx);
+    ln.style.display = "";
+  },
+  open(ri, expand = true) {
+    this.ri = ri;
+    this.render();
+    if (expand) this.expand(true);
+    if (state.result?.exact.routes[ri] && expand) focusRoute(ri);
+  },
+  expand(on) {
+    $("#tl-body").hidden = !on;
+    $("#tl-toggle").setAttribute("aria-expanded", String(on));
+    this.dock.classList.toggle("open", on);
+    if (on) this.draw();
+  },
+  hide() {
+    this.dock.hidden = true;
+    document.body.classList.remove("has-tl");
+    anim.pause();
+  },
+};
+$("#tl-route").addEventListener("change", (e) => { tl.ri = Number(e.target.value); tl.draw(); if (G.ok) focusRoute(tl.ri); });
+$("#tl-toggle").addEventListener("click", () => tl.expand($("#tl-body").hidden));
+$("#tl-svg").addEventListener("click", (e) => {
+  const g = e.target.closest("[data-row]");
+  if (!g || !state.result) return;
+  const r = state.result.exact.routes[tl.ri];
+  const k = Number(g.dataset.row);
+  const id = Number.isInteger(k) ? state.result.pointIds[r.stops[k]] : state.result.pointIds[r.depot];
+  G.markers.get(id)?.open();
+});
+if (window.ResizeObserver) new ResizeObserver(() => { if (!$("#tl-body").hidden) tl.draw(); }).observe($("#tl-svg"));
+
+const anim = {
+  res: null, t: 0, t0: 0, t1: 1, started: false, playing: false, raf: 0, last: 0, dur: 40,
+  veh: [], data: [],
+  attach() {
+    const res = state.result;
+    if (!res) return;
+    if (this.res !== res) {
+      this.res = res;
+      this.pause();
+      this.started = false;
+      const sch = res.exact.routes.map((r) => routeSchedule(r, res));
+      this.t0 = sch.length ? Math.min(...sch.map((s) => s.depart)) : 0;
+      this.t1 = sch.length ? Math.max(...sch.map((s) => s.finish)) : 1;
+      if (this.t1 - this.t0 < 1) this.t1 = this.t0 + 1;
+      this.t = this.t0;
+    }
+    this.data = res.exact.routes.map((r, ri) => {
+      const coords = routeCoords(r, res);
+      return { sch: routeSchedule(r, res), coords, legs: splitPath(G.paths[ri], coords), ids: r.stops.map((s) => res.pointIds[s]) };
+    });
+    this.removeVehicles();
+    if (G.ok) {
+      this.veh = this.data.map((d, ri) => {
+        const el = document.createElement("div");
+        el.className = "veh";
+        el.style.setProperty("--c", colorOf(ri));
+        el.innerHTML = `<span class="veh-b">${TRUCK}</span><b>${ri + 1}</b>`;
+        return G.view.addVehicle({ lat: d.coords[0][0], lng: d.coords[0][1], el });
+      });
+    }
+    this.draw();
+  },
+  detach() {
+    this.pause();
+    this.removeVehicles();
+    this.res = null;
+    this.started = false;
+    $("#map")?.classList.remove("animating");
+    G.markers.forEach((m) => m.el.classList.remove("served"));
+  },
+  removeVehicles() { this.veh.forEach((v) => v.remove()); this.veh = []; },
+  draw() {
+    if (!this.res) return;
+    const showServed = this.started;
+    $("#map").classList.toggle("animating", showServed);
+    this.data.forEach((d, ri) => {
+      const v = this.veh[ri];
+      const hidden = G.hidden.has(ri);
+      if (v) {
+        const at = vehicleAt(d.sch, d.legs, d.coords, this.t);
+        v.move(at.pos[0], at.pos[1]);
+        v.el.dataset.phase = at.phase;
+        v.el.classList.toggle("hide", hidden || (!this.started && false));
+        v.el.title = `Rota ${ri + 1}`;
+      }
+      d.ids.forEach((id, k) => G.markers.get(id)?.el.classList.toggle("served", showServed && this.t >= d.sch.items[k].end - 1e-6));
+    });
+    this.ui();
+    tl.cursor();
+  },
+  ui() {
+    if (!this.res) return;
+    const start = toMin(this.res.opts.dayStart);
+    $("#tl-clock").textContent = fmtClock(start + this.t);
+    $("#tl-range").value = String(Math.round(((this.t - this.t0) / (this.t1 - this.t0)) * 1000));
+    const pb = $("#tl-play");
+    pb.innerHTML = this.playing ? PAUSE : PLAY;
+    pb.setAttribute("aria-label", this.playing ? "Pausar animação" : "Animar as rotas");
+    pb.title = pb.getAttribute("aria-label");
+    const busy = this.res.exact.routes.filter((r, ri) => { const s = routeSchedule(r, this.res); return this.t > s.depart && this.t < s.finish; }).length;
+    $("#tl-status").textContent = !this.started ? `${this.res.exact.routes.length} veículo(s) no depósito`
+      : this.t >= this.t1 ? "Todos voltaram" : `${busy} em rota`;
+  },
+  play(restart = false) {
+    if (!this.res) return;
+    if (restart || this.t >= this.t1) this.t = this.t0;
+    this.started = true;
+    this.playing = true;
+    this.last = performance.now();
+    cancelAnimationFrame(this.raf);
+    const tick = (now) => {
+      if (!this.playing) return;
+      const dt = Math.min(0.25, (now - this.last) / 1000);
+      this.last = now;
+      this.t = Math.min(this.t1, this.t + dt * (this.t1 - this.t0) / this.dur);
+      if (this.t >= this.t1) this.playing = false;
+      this.draw();
+      if (this.playing) this.raf = requestAnimationFrame(tick);
+    };
+    this.raf = requestAnimationFrame(tick);
+    this.ui();
+  },
+  pause() {
+    this.playing = false;
+    cancelAnimationFrame(this.raf);
+    if (this.res) this.ui();
+  },
+  seek(t) {
+    this.t = Math.min(this.t1, Math.max(this.t0, t));
+    this.started = true;
+    this.draw();
+  },
+};
+$("#tl-play").addEventListener("click", () => (anim.playing ? anim.pause() : anim.play()));
+$("#tl-reset").addEventListener("click", () => { anim.pause(); anim.started = false; anim.t = anim.t0; anim.draw(); });
+$("#tl-range").addEventListener("input", (e) => { anim.pause(); anim.seek(anim.t0 + (Number(e.target.value) / 1000) * (anim.t1 - anim.t0)); });
+$("#tl-speed").addEventListener("change", (e) => { anim.dur = Number(e.target.value) || 40; });
 
 /* --------------------------------------------------------------------------
    Início
