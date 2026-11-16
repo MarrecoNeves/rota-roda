@@ -145,6 +145,7 @@ def _route_json(r, vtypes):
         "depot": r.depot,
         "stops": r.stops,
         "arrivals": r.arrivals,
+        "legs": r.legs,
         "load": r.load,
         "dist_km": r.dist_km,
         "time_min": r.time_min,

@@ -58,7 +58,8 @@ class Route:
     dist_km: float = 0.0
     time_min: float = 0.0
     cost: float = 0.0
-    arrivals: list[float] = field(default_factory=list)  # chegada em cada cliente (min)
+    arrivals: list[float] = field(default_factory=list)  # inicio do atendimento em cada cliente (min)
+    legs: list[float] = field(default_factory=list)      # tempo de deslocamento de cada trecho (min)
 
 
 class ProblemError(ValueError):
@@ -147,6 +148,8 @@ def evaluate_route(seq: list[int], depot: int, points, dist, tmat, opt: Options)
 
 def _finish_route(r: Route, points, dist, tmat, vtypes, opt):
     d, t_end, arr, _ = evaluate_route(r.stops, r.depot, points, dist, tmat, opt)
+    seq = [r.depot] + r.stops + ([r.depot] if opt.return_to_depot else [])
+    r.legs = [round(tmat[a][b], 2) for a, b in zip(seq, seq[1:])]  # para a linha do tempo
     v = vtypes[r.vehicle_type]
     r.load = sum(points[c].demand for c in r.stops)
     r.dist_km = round(d, 3)
