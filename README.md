@@ -35,6 +35,44 @@ O Google Maps é opcional.
 - **Exportação para Excel** (resumo, custos por rota e sequência com horários).
 - **Degradação segura:** se um serviço de mapa cair, o app continua funcionando e a tela informa a fonte usada.
 
+## Exemplos prontos: 3 casos reais com 50 clientes
+
+O botão **Exemplos** abre quatro cenários prontos para testar o app (gerados por `tools/gerar_exemplos.py`).
+Os endereços são reais, tirados do OpenStreetMap em 16/11/2026 (`tools/dados_exemplos/`). Demandas, janelas
+e frota são ilustrativas, escolhidas para cada tipo de operação.
+
+| Caso | Onde | Clientes | Frota | O que mostra |
+|---|---|---|---|---|
+| Exemplo da aula | Niterói | 7 | 2 vans de 300 | o caso do enunciado |
+| Rede de farmácias (lojas Drogarias Pacheco) | Rio e Niterói, CD hipotético em São Cristóvão | 50 lojas | vans baú de 150 caixas | janelas de recebimento; o Centro recebe até 9h30; travessia da ponte |
+| Supermercado: entregas com hora marcada | Icaraí, Santa Rosa, Ingá (Niterói) | 50 pedidos | utilitários de 22 caixas | janelas de 2 h entre 8h e 20h; C&W fica bem acima do ótimo |
+| Distribuidora de bebidas | Botafogo, Humaitá, Copacabana, Leme | 50 bares e restaurantes | VUC de 150 caixas | janelas de manhã e de tarde, com esperas longas |
+
+No Render (plano grátis, distâncias reais do OSRM), o branch-cut-and-price **provou o ótimo** dos três casos
+em 16/11/2026: farmácias em 33 s (R$ 1.510,24, 7 vans, C&W 0,9% acima), supermercado em 28 s (R$ 687,89,
+8 utilitários; o C&W não achou solução viável com a frota) e bebidas em 60 s (R$ 1.510,05, 8 VUCs, C&W 12,7% acima).
+Cada caso já vem com tempo máximo de 90 s.
+Com frota heterogênea, os mesmos 50 clientes ficam bem mais difíceis para o CLP (não fecha a raiz em 90 s),
+por isso os casos usam um tipo de veículo.
+
+## Linha do tempo das rotas e animação
+
+Na etapa **Rotas**, a barra no rodapé do mapa tem:
+
+- **Animar as rotas:** um veículo por rota sai do depósito, segue o traçado pelas ruas, espera a janela abrir,
+  atende cada parada no horário previsto e volta. As paradas já atendidas ganham um contorno verde.
+  Dá para pausar, arrastar o horário e escolher a velocidade.
+- **Linha do tempo (Route Timeline):** uma linha por visita, na ordem da rota, no mesmo formato do CVRPLib:
+  janela de tempo, chegada (×), espera (vermelho), início do atendimento (○), atendimento (azul) e
+  deslocamento. O cursor laranja acompanha a animação. Clicar numa linha abre o ponto no mapa.
+- Com janelas de tempo, o veículo **sai o mais tarde possível sem perder nenhuma janela**, então só sobra a
+  espera inevitável. Esse horário de saída também aparece na sequência de entregas, no WhatsApp e no Excel
+  (que ganhou as colunas de espera e de início/fim do atendimento).
+
+A API agora devolve, em cada rota, `legs`: o tempo de cada trecho (min), usado pela linha do tempo.
+O cálculo da agenda, o corte do traçado por parada e o SVG ficam em `app/static/timeline.js`
+(testes: `node tests/js/timeline.test.mjs`).
+
 ## Identidade visual
 
 O app usa as cores institucionais da UFF (Azul-UFF `#004f9f` e Cinza-UFF `#eaeaea`, conforme o manual da
@@ -104,9 +142,10 @@ app/
   extras.py      GraphHopper, OpenRouteService e TomTom (opcionais, com chave grátis)
   solver.py      modelagem VRPSolverEasy, Clarke & Wright, avaliação de rotas
   geo.py         OpenStreetMap (Photon, Nominatim, OSRM) e Google, com fallbacks
-  static/        index.html, styles.css, app.js, services.js, planilha.js + vendor/ (Leaflet, SheetJS e QR code locais)
-tests/           28 testes em Python (inclui conferência do ótimo por força bruta) + tests/js (leitor de planilhas)
-tools/           gerar_modelo.py (gera a planilha-modelo)
+  static/        index.html, styles.css, app.js, services.js, planilha.js, timeline.js, exemplos.js
+                 + vendor/ (Leaflet, SheetJS e QR code locais)
+tests/           29 testes em Python (inclui conferência do ótimo por força bruta) + tests/js (planilhas e linha do tempo)
+tools/           gerar_modelo.py (planilha-modelo) e gerar_exemplos.py (os 3 casos, a partir de dados_exemplos/)
 Dockerfile, render.yaml, requirements.txt
 ```
 
@@ -203,6 +242,7 @@ Uma planilha **sem cabeçalho**, só com endereços numa coluna, também funcion
 quantos pontos entraram e quais linhas não foram localizadas no mapa. O mapa gratuito localiza cerca de
 1 endereço por segundo; há uma barra de progresso com botão **Cancelar**.
 
+Testes da linha do tempo: `node tests/js/timeline.test.mjs` (8 casos).
 Testes do leitor: `node tests/js/planilha.test.mjs` (12 casos: modelo vazio e preenchido, título acima do
 cabeçalho, colunas separadas, sem cabeçalho, CSV, lat/lng, colar lista).
 
