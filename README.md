@@ -53,9 +53,10 @@ planilha do grupo, com as premissas dela; as coordenadas foram conferidas no Ope
 No Render (plano grátis, distâncias reais do OSRM), o branch-cut-and-price **provou o ótimo** dos três casos
 em 16/11/2026: farmácias em 33 s (R$ 1.510,24, 7 vans, C&W 0,9% acima), supermercado em 28 s (R$ 687,89,
 8 utilitários; o C&W não achou solução viável com a frota) e bebidas em 60 s (R$ 1.510,05, 8 VUCs, C&W 12,7% acima).
-Cada caso já vem com tempo máximo de 90 s. O caso de fast food é o mais leve para o solver, apesar de cobrir o estado
-inteiro: com 13.230 caixas e caminhões de 1.200, cada rota tem só 4 ou 5 lojas, e o ótimo (12 caminhões) sai na raiz em
-poucos segundos.
+Cada caso já vem com tempo máximo de 90 s. O caso de fast food, rodado no app publicado em 23/11/2026, é o mais leve
+para o solver apesar de cobrir o estado inteiro: ótimo provado em 10,6 s (R$ 12.385,44, 12 caminhões, 1.996 km, ocupação
+média de 92%; C&W 5,4% acima). Com 13.230 caixas e caminhões de 1.200, cada rota tem só 3 a 5 lojas. A rota mais longa
+(Nova Friburgo, Campos, Macaé e Rio das Ostras) roda 650 km em quase 15 h: o modelo não limita a jornada do motorista.
 Com frota heterogênea, os mesmos 50 clientes ficam bem mais difíceis para o CLP (não fecha a raiz em 90 s),
 por isso os casos usam um tipo de veículo.
 
