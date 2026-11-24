@@ -2,9 +2,9 @@
    Rota Roda — front-end (OpenStreetMap ou Google Maps + API FastAPI/VRPSolverEasy)
    ========================================================================== */
 
-import { OSM, isCEP, lookupCEP, cepAddress, forecast, summarizeWeather, weatherInfo, fuelStations, whatsappLink, qrSvg } from "./services.js?v=20261116b";
-import { readWorkbook, parsePasted, PlanilhaError } from "./planilha.js?v=20261116b";
-import { schedule, splitPath, vehicleAt, timelineSVG } from "./timeline.js?v=20261116b";
+import { OSM, isCEP, lookupCEP, cepAddress, forecast, summarizeWeather, weatherInfo, fuelStations, whatsappLink, qrSvg } from "./services.js?v=20261123a";
+import { readWorkbook, parsePasted, PlanilhaError } from "./planilha.js?v=20261123a";
+import { schedule, splitPath, vehicleAt, timelineSVG } from "./timeline.js?v=20261123a";
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -848,11 +848,11 @@ const EXEMPLO = [
   { name: "Tenente Osório, 30", address: "Rua Tenente Osório, 30 - Fonseca, Niterói - RJ", lat: -22.88286, lng: -43.10438, demand: 60 },
 ];
 
-/* ---- exemplos: Niterói (aula) + 3 casos com endereços reais (OpenStreetMap) ---- */
+/* ---- exemplos: Niterói (aula) + 4 casos com endereços reais (OpenStreetMap) ---- */
 let EXEMPLOS = null;
 async function exemplos() {
   if (!EXEMPLOS) {
-    const m = await import("./exemplos.js?v=20261116b");
+    const m = await import("./exemplos.js?v=20261123a");
     EXEMPLOS = [{
       id: "niteroi", title: "Exemplo da aula · Niterói", tag: "CVRP · 7 clientes",
       desc: "O exemplo do enunciado: 1 depósito na Escola de Engenharia e 7 clientes. Resolve em menos de 1 segundo.",

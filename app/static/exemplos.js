@@ -1621,5 +1621,545 @@ export const CASOS = [
    "timeLimit": 90,
    "returnToDepot": true
   }
+ },
+ {
+  "id": "mcdonalds",
+  "color": "#da291c",
+  "icon": "🍔",
+  "title": "Fast food · abastecimento de 50 lojas no estado",
+  "tag": "VRPTW · 50 lojas · estado do RJ",
+  "desc": "50 lojas McDonald's da capital, Baixada, Niterói/São Gonçalo, Serra, Lagos, Norte e Sul Fluminense, saindo de um CD hipotético na CEASA (Irajá). Lojas de rua do centro recebem das 5h às 8h, shoppings das 6h às 10h e drive-thrus entre o almoço e o jantar; o interior pede viagens de até 4 horas.",
+  "stats": [
+   "50 lojas",
+   "caminhão 3 temp. de 1.200 caixas",
+   "janelas por tipo de loja",
+   "atendimento 25–45 min"
+  ],
+  "points": [
+   {
+    "name": "CD Rio (hipotético) – CEASA Irajá",
+    "address": "Avenida Brasil, 19001, Irajá, Rio de Janeiro - RJ",
+    "lat": -22.820456,
+    "lng": -43.319561,
+    "demand": 0,
+    "isDepot": true
+   },
+   {
+    "name": "McD Centro – Rio Branco",
+    "address": "Avenida Rio Branco, 100, Centro, Rio de Janeiro - RJ",
+    "lat": -22.903377,
+    "lng": -43.178508,
+    "demand": 180,
+    "service": 25,
+    "twStart": "05:00",
+    "twEnd": "08:00"
+   },
+   {
+    "name": "McD Centro – Uruguaiana",
+    "address": "Rua Uruguaiana, 174, Centro, Rio de Janeiro - RJ",
+    "lat": -22.90231,
+    "lng": -43.181149,
+    "demand": 220,
+    "service": 25,
+    "twStart": "05:00",
+    "twEnd": "08:00"
+   },
+   {
+    "name": "McD Rio Sul",
+    "address": "Rua Lauro Müller, 116, Botafogo, Rio de Janeiro - RJ",
+    "lat": -22.957046,
+    "lng": -43.176324,
+    "demand": 280,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Botafogo Praia Shopping",
+    "address": "Praia de Botafogo, 400, Botafogo, Rio de Janeiro - RJ",
+    "lat": -22.947464,
+    "lng": -43.183502,
+    "demand": 210,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Fashion Mall",
+    "address": "Estrada da Gávea, 899, São Conrado, Rio de Janeiro - RJ",
+    "lat": -22.99661,
+    "lng": -43.260025,
+    "demand": 160,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Shopping Tijuca",
+    "address": "Avenida Maracanã, 987, Tijuca, Rio de Janeiro - RJ",
+    "lat": -22.921531,
+    "lng": -43.235009,
+    "demand": 260,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Boulevard Rio (Iguatemi)",
+    "address": "Rua Barão de São Francisco, 236, Vila Isabel, Rio de Janeiro - RJ",
+    "lat": -22.919387,
+    "lng": -43.250145,
+    "demand": 220,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD NorteShopping",
+    "address": "Avenida Dom Hélder Câmara, 5474, Cachambi, Rio de Janeiro - RJ",
+    "lat": -22.887078,
+    "lng": -43.282893,
+    "demand": 360,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Nova América",
+    "address": "Avenida Pastor Martin Luther King Jr., 126, Del Castilho, Rio de Janeiro - RJ",
+    "lat": -22.878065,
+    "lng": -43.272741,
+    "demand": 340,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Carioca Shopping",
+    "address": "Avenida Vicente de Carvalho, 909, Vila da Penha, Rio de Janeiro - RJ",
+    "lat": -22.850476,
+    "lng": -43.311255,
+    "demand": 300,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Madureira Shopping",
+    "address": "Estrada do Portela, 99, Madureira, Rio de Janeiro - RJ",
+    "lat": -22.870354,
+    "lng": -43.341005,
+    "demand": 320,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Shopping Jardim Guadalupe",
+    "address": "Avenida Brasil, 22155, Guadalupe, Rio de Janeiro - RJ",
+    "lat": -22.84147,
+    "lng": -43.370093,
+    "demand": 240,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Pavuna",
+    "address": "Avenida Sargento de Milícias, 121, Pavuna, Rio de Janeiro - RJ",
+    "lat": -22.805059,
+    "lng": -43.364793,
+    "demand": 200,
+    "service": 25,
+    "twStart": "14:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Ilha Plaza",
+    "address": "Avenida Maestro Paulo e Silva, 400, Jardim Guanabara, Rio de Janeiro - RJ",
+    "lat": -22.801774,
+    "lng": -43.201791,
+    "demand": 230,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Aeroporto Galeão",
+    "address": "Avenida Vinte de Janeiro, s/n, Galeão, Rio de Janeiro - RJ",
+    "lat": -22.814935,
+    "lng": -43.247145,
+    "demand": 190,
+    "service": 45,
+    "twStart": "09:00",
+    "twEnd": "15:00"
+   },
+   {
+    "name": "McD BarraShopping",
+    "address": "Avenida das Américas, 4666, Barra da Tijuca, Rio de Janeiro - RJ",
+    "lat": -22.997694,
+    "lng": -43.358061,
+    "demand": 380,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Barra – Mandala (24h)",
+    "address": "Avenida das Américas, 6101, Barra da Tijuca, Rio de Janeiro - RJ",
+    "lat": -23.000653,
+    "lng": -43.374946,
+    "demand": 330,
+    "service": 25,
+    "twStart": "14:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Via Parque",
+    "address": "Avenida Ayrton Senna, 3000, Barra da Tijuca, Rio de Janeiro - RJ",
+    "lat": -22.982879,
+    "lng": -43.362226,
+    "demand": 250,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Metropolitano Barra",
+    "address": "Avenida Embaixador Abelardo Bueno, 1300, Barra da Tijuca, Rio de Janeiro - RJ",
+    "lat": -22.970877,
+    "lng": -43.372204,
+    "demand": 240,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Recreio Shopping",
+    "address": "Avenida das Américas, 19019, Recreio dos Bandeirantes, Rio de Janeiro - RJ",
+    "lat": -23.021777,
+    "lng": -43.489204,
+    "demand": 260,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Recreio Orla (drive)",
+    "address": "Avenida Lúcio Costa, 16050, Recreio dos Bandeirantes, Rio de Janeiro - RJ",
+    "lat": -23.023748,
+    "lng": -43.453734,
+    "demand": 310,
+    "service": 25,
+    "twStart": "14:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD West Shopping",
+    "address": "Estrada do Mendanha, 555, Campo Grande, Rio de Janeiro - RJ",
+    "lat": -22.884176,
+    "lng": -43.558164,
+    "demand": 290,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Park Shopping Campo Grande",
+    "address": "Estrada do Monteiro, 1200, Campo Grande, Rio de Janeiro - RJ",
+    "lat": -22.926783,
+    "lng": -43.576559,
+    "demand": 270,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Bangu Shopping",
+    "address": "Rua Fonseca, 240, Bangu, Rio de Janeiro - RJ",
+    "lat": -22.879442,
+    "lng": -43.466117,
+    "demand": 280,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Shopping Grande Rio",
+    "address": "Rodovia Presidente Dutra, 4200, Jardim Bonifácio, São João de Meriti - RJ",
+    "lat": -22.797355,
+    "lng": -43.350778,
+    "demand": 350,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Meriti Centro",
+    "address": "Rua da Matriz, 286, Centro, São João de Meriti - RJ",
+    "lat": -22.801583,
+    "lng": -43.371462,
+    "demand": 170,
+    "service": 25,
+    "twStart": "05:00",
+    "twEnd": "08:00"
+   },
+   {
+    "name": "McD Caxias Shopping",
+    "address": "Rodovia Washington Luiz, 2895, Vila São Luiz, Duque de Caxias - RJ",
+    "lat": -22.788395,
+    "lng": -43.28487,
+    "demand": 330,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Caxias Centro",
+    "address": "Rua José de Alvarenga, 95, Centro, Duque de Caxias - RJ",
+    "lat": -22.791449,
+    "lng": -43.311684,
+    "demand": 200,
+    "service": 25,
+    "twStart": "05:00",
+    "twEnd": "08:00"
+   },
+   {
+    "name": "McD Belford Roxo",
+    "address": "Avenida Jorge Júlio da Costa dos Santos, 50, Rocha Sobrinho, Belford Roxo - RJ",
+    "lat": -22.775264,
+    "lng": -43.399428,
+    "demand": 230,
+    "service": 25,
+    "twStart": "14:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Top Shopping",
+    "address": "Avenida Governador Roberto Silveira, 540, Centro, Nova Iguaçu - RJ",
+    "lat": -22.753236,
+    "lng": -43.454208,
+    "demand": 310,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Shopping Nova Iguaçu",
+    "address": "Avenida Abílio Augusto Távora, 1111, Nova Iguaçu - RJ",
+    "lat": -22.762332,
+    "lng": -43.465029,
+    "demand": 290,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Plaza Niterói",
+    "address": "Rua Quinze de Novembro, 8, Centro, Niterói - RJ",
+    "lat": -22.897066,
+    "lng": -43.124041,
+    "demand": 320,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Icaraí",
+    "address": "Rua Gavião Peixoto, 50, Icaraí, Niterói - RJ",
+    "lat": -22.901845,
+    "lng": -43.112208,
+    "demand": 190,
+    "service": 25,
+    "twStart": "14:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Niterói Conceição",
+    "address": "Rua da Conceição, 188, Centro, Niterói - RJ",
+    "lat": -22.894863,
+    "lng": -43.118498,
+    "demand": 170,
+    "service": 25,
+    "twStart": "05:00",
+    "twEnd": "08:00"
+   },
+   {
+    "name": "McD São Gonçalo Shopping",
+    "address": "Avenida São Gonçalo, 100, Boa Vista, São Gonçalo - RJ",
+    "lat": -22.81305,
+    "lng": -43.07041,
+    "demand": 320,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Partage São Gonçalo",
+    "address": "Avenida Presidente Kennedy, 425, Centro, São Gonçalo - RJ",
+    "lat": -22.823574,
+    "lng": -43.046568,
+    "demand": 260,
+    "service": 35,
+    "twStart": "06:00",
+    "twEnd": "10:00"
+   },
+   {
+    "name": "McD Alcântara",
+    "address": "Rua Doutor Alfredo Backer, 574, Alcântara, São Gonçalo - RJ",
+    "lat": -22.819308,
+    "lng": -43.003777,
+    "demand": 220,
+    "service": 25,
+    "twStart": "14:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Neves",
+    "address": "Rua Doutor Oliveira Botelho, 349, Neves, São Gonçalo - RJ",
+    "lat": -22.854575,
+    "lng": -43.101487,
+    "demand": 180,
+    "service": 25,
+    "twStart": "14:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Itaboraí – BR-101 Manilha (drive)",
+    "address": "Rodovia BR-101, Km 295, Manilha, Itaboraí - RJ",
+    "lat": -22.7747,
+    "lng": -42.940019,
+    "demand": 300,
+    "service": 25,
+    "twStart": "14:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Petrópolis – Imperador",
+    "address": "Rua do Imperador, 786, Centro, Petrópolis - RJ",
+    "lat": -22.510476,
+    "lng": -43.176883,
+    "demand": 240,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Petrópolis – Treze de Maio",
+    "address": "Rua Treze de Maio, 135, Centro, Petrópolis - RJ",
+    "lat": -22.505557,
+    "lng": -43.181024,
+    "demand": 180,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Teresópolis",
+    "address": "Avenida Feliciano Sodré, 307, Várzea, Teresópolis - RJ",
+    "lat": -22.420748,
+    "lng": -42.975813,
+    "demand": 260,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Nova Friburgo (drive)",
+    "address": "Avenida Comte Bittencourt, 16, Centro, Nova Friburgo - RJ",
+    "lat": -22.28645,
+    "lng": -42.533521,
+    "demand": 280,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Cabo Frio",
+    "address": "Avenida Nossa Senhora da Assunção, 611, Centro, Cabo Frio - RJ",
+    "lat": -22.877467,
+    "lng": -42.014705,
+    "demand": 300,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Rio das Ostras",
+    "address": "Rua Hernani Coutinho da Costa, 21, Rio das Ostras - RJ",
+    "lat": -22.514716,
+    "lng": -41.930149,
+    "demand": 250,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Macaé",
+    "address": "Avenida Aluízio da Silva Gomes, 800, Granja dos Cavaleiros, Macaé - RJ",
+    "lat": -22.397936,
+    "lng": -41.791405,
+    "demand": 320,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Campos dos Goytacazes",
+    "address": "Avenida Vinte e Oito de Março, 574, Centro, Campos dos Goytacazes - RJ",
+    "lat": -21.765981,
+    "lng": -41.330299,
+    "demand": 340,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Volta Redonda (drive)",
+    "address": "Rua Quatorze, 500, Vila Santa Cecília, Volta Redonda - RJ",
+    "lat": -22.517964,
+    "lng": -44.108139,
+    "demand": 330,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Resende Shopping",
+    "address": "Rua Dorival Marcondes de Godoy, 500, Paraíso, Resende - RJ",
+    "lat": -22.466304,
+    "lng": -44.451741,
+    "demand": 260,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   },
+   {
+    "name": "McD Resende – Via Dutra (drive)",
+    "address": "Rodovia Presidente Dutra, Km 305, Paraíso, Resende - RJ",
+    "lat": -22.458972,
+    "lng": -44.439249,
+    "demand": 310,
+    "service": 40,
+    "twStart": "08:00",
+    "twEnd": "18:00"
+   }
+  ],
+  "fleet": [
+   {
+    "name": "Caminhão 3 temperaturas",
+    "capacity": 1200,
+    "qty": 20,
+    "costKm": 3.5,
+    "fixedCost": 450
+   }
+  ],
+  "opts": {
+   "useTW": true,
+   "dayStart": "04:00",
+   "dayEnd": "23:00",
+   "timeLimit": 90,
+   "returnToDepot": true
+  }
  }
 ];
