@@ -1,0 +1,55 @@
+# Case McDonald's RJ: 50 lojas abastecidas por um CD hipotético (CEASA-RJ, Irajá).
+# Fonte: planilha 'Rota Roda - 50 McDonalds RJ.xlsx' (23/11/2026). Coordenadas: M = ponto do McDonald's no
+# OpenStreetMap (Overpass), S = shopping/endereço via Nominatim, A = aproximado (McDonald's da mesma cidade).
+# lat|lng|origem|nome|endereço|demanda|abre|fecha|atendimento
+-22.820456|-43.319561|S|CD Rio (hipotético) – CEASA Irajá|Avenida Brasil, 19001, Irajá, Rio de Janeiro - RJ|0|04:00|23:00|0
+-22.903377|-43.178508|M|McD Centro – Rio Branco|Avenida Rio Branco, 100, Centro, Rio de Janeiro - RJ|180|05:00|08:00|25
+-22.90231|-43.181149|M|McD Centro – Uruguaiana|Rua Uruguaiana, 174, Centro, Rio de Janeiro - RJ|220|05:00|08:00|25
+-22.957046|-43.176324|M|McD Rio Sul|Rua Lauro Müller, 116, Botafogo, Rio de Janeiro - RJ|280|06:00|10:00|35
+-22.947464|-43.183502|M|McD Botafogo Praia Shopping|Praia de Botafogo, 400, Botafogo, Rio de Janeiro - RJ|210|06:00|10:00|35
+-22.99661|-43.260025|S|McD Fashion Mall|Estrada da Gávea, 899, São Conrado, Rio de Janeiro - RJ|160|06:00|10:00|35
+-22.921531|-43.235009|M|McD Shopping Tijuca|Avenida Maracanã, 987, Tijuca, Rio de Janeiro - RJ|260|06:00|10:00|35
+-22.919387|-43.250145|S|McD Boulevard Rio (Iguatemi)|Rua Barão de São Francisco, 236, Vila Isabel, Rio de Janeiro - RJ|220|06:00|10:00|35
+-22.887078|-43.282893|M|McD NorteShopping|Avenida Dom Hélder Câmara, 5474, Cachambi, Rio de Janeiro - RJ|360|06:00|10:00|35
+-22.878065|-43.272741|M|McD Nova América|Avenida Pastor Martin Luther King Jr., 126, Del Castilho, Rio de Janeiro - RJ|340|06:00|10:00|35
+-22.850476|-43.311255|M|McD Carioca Shopping|Avenida Vicente de Carvalho, 909, Vila da Penha, Rio de Janeiro - RJ|300|06:00|10:00|35
+-22.870354|-43.341005|M|McD Madureira Shopping|Estrada do Portela, 99, Madureira, Rio de Janeiro - RJ|320|06:00|10:00|35
+-22.84147|-43.370093|M|McD Shopping Jardim Guadalupe|Avenida Brasil, 22155, Guadalupe, Rio de Janeiro - RJ|240|06:00|10:00|35
+-22.805059|-43.364793|M|McD Pavuna|Avenida Sargento de Milícias, 121, Pavuna, Rio de Janeiro - RJ|200|14:00|18:00|25
+-22.801774|-43.201791|M|McD Ilha Plaza|Avenida Maestro Paulo e Silva, 400, Jardim Guanabara, Rio de Janeiro - RJ|230|06:00|10:00|35
+-22.814935|-43.247145|M|McD Aeroporto Galeão|Avenida Vinte de Janeiro, s/n, Galeão, Rio de Janeiro - RJ|190|09:00|15:00|45
+-22.997694|-43.358061|M|McD BarraShopping|Avenida das Américas, 4666, Barra da Tijuca, Rio de Janeiro - RJ|380|06:00|10:00|35
+-23.000653|-43.374946|S|McD Barra – Mandala (24h)|Avenida das Américas, 6101, Barra da Tijuca, Rio de Janeiro - RJ|330|14:00|18:00|25
+-22.982879|-43.362226|M|McD Via Parque|Avenida Ayrton Senna, 3000, Barra da Tijuca, Rio de Janeiro - RJ|250|06:00|10:00|35
+-22.970877|-43.372204|M|McD Metropolitano Barra|Avenida Embaixador Abelardo Bueno, 1300, Barra da Tijuca, Rio de Janeiro - RJ|240|06:00|10:00|35
+-23.021777|-43.489204|M|McD Recreio Shopping|Avenida das Américas, 19019, Recreio dos Bandeirantes, Rio de Janeiro - RJ|260|06:00|10:00|35
+-23.023748|-43.453734|S|McD Recreio Orla (drive)|Avenida Lúcio Costa, 16050, Recreio dos Bandeirantes, Rio de Janeiro - RJ|310|14:00|18:00|25
+-22.884176|-43.558164|M|McD West Shopping|Estrada do Mendanha, 555, Campo Grande, Rio de Janeiro - RJ|290|06:00|10:00|35
+-22.926783|-43.576559|M|McD Park Shopping Campo Grande|Estrada do Monteiro, 1200, Campo Grande, Rio de Janeiro - RJ|270|06:00|10:00|35
+-22.879442|-43.466117|M|McD Bangu Shopping|Rua Fonseca, 240, Bangu, Rio de Janeiro - RJ|280|06:00|10:00|35
+-22.797355|-43.350778|S|McD Shopping Grande Rio|Rodovia Presidente Dutra, 4200, Jardim Bonifácio, São João de Meriti - RJ|350|06:00|10:00|35
+-22.801583|-43.371462|S|McD Meriti Centro|Rua da Matriz, 286, Centro, São João de Meriti - RJ|170|05:00|08:00|25
+-22.788395|-43.28487|M|McD Caxias Shopping|Rodovia Washington Luiz, 2895, Vila São Luiz, Duque de Caxias - RJ|330|06:00|10:00|35
+-22.791449|-43.311684|M|McD Caxias Centro|Rua José de Alvarenga, 95, Centro, Duque de Caxias - RJ|200|05:00|08:00|25
+-22.775264|-43.399428|A|McD Belford Roxo|Avenida Jorge Júlio da Costa dos Santos, 50, Rocha Sobrinho, Belford Roxo - RJ|230|14:00|18:00|25
+-22.753236|-43.454208|S|McD Top Shopping|Avenida Governador Roberto Silveira, 540, Centro, Nova Iguaçu - RJ|310|06:00|10:00|35
+-22.762332|-43.465029|M|McD Shopping Nova Iguaçu|Avenida Abílio Augusto Távora, 1111, Nova Iguaçu - RJ|290|06:00|10:00|35
+-22.897066|-43.124041|M|McD Plaza Niterói|Rua Quinze de Novembro, 8, Centro, Niterói - RJ|320|06:00|10:00|35
+-22.901845|-43.112208|M|McD Icaraí|Rua Gavião Peixoto, 50, Icaraí, Niterói - RJ|190|14:00|18:00|25
+-22.894863|-43.118498|S|McD Niterói Conceição|Rua da Conceição, 188, Centro, Niterói - RJ|170|05:00|08:00|25
+-22.81305|-43.07041|M|McD São Gonçalo Shopping|Avenida São Gonçalo, 100, Boa Vista, São Gonçalo - RJ|320|06:00|10:00|35
+-22.823574|-43.046568|M|McD Partage São Gonçalo|Avenida Presidente Kennedy, 425, Centro, São Gonçalo - RJ|260|06:00|10:00|35
+-22.819308|-43.003777|M|McD Alcântara|Rua Doutor Alfredo Backer, 574, Alcântara, São Gonçalo - RJ|220|14:00|18:00|25
+-22.854575|-43.101487|A|McD Neves|Rua Doutor Oliveira Botelho, 349, Neves, São Gonçalo - RJ|180|14:00|18:00|25
+-22.7747|-42.940019|S|McD Itaboraí – BR-101 Manilha (drive)|Rodovia BR-101, Km 295, Manilha, Itaboraí - RJ|300|14:00|18:00|25
+-22.510476|-43.176883|M|McD Petrópolis – Imperador|Rua do Imperador, 786, Centro, Petrópolis - RJ|240|08:00|18:00|40
+-22.505557|-43.181024|M|McD Petrópolis – Treze de Maio|Rua Treze de Maio, 135, Centro, Petrópolis - RJ|180|08:00|18:00|40
+-22.420748|-42.975813|M|McD Teresópolis|Avenida Feliciano Sodré, 307, Várzea, Teresópolis - RJ|260|08:00|18:00|40
+-22.28645|-42.533521|M|McD Nova Friburgo (drive)|Avenida Comte Bittencourt, 16, Centro, Nova Friburgo - RJ|280|08:00|18:00|40
+-22.877467|-42.014705|M|McD Cabo Frio|Avenida Nossa Senhora da Assunção, 611, Centro, Cabo Frio - RJ|300|08:00|18:00|40
+-22.514716|-41.930149|M|McD Rio das Ostras|Rua Hernani Coutinho da Costa, 21, Rio das Ostras - RJ|250|08:00|18:00|40
+-22.397936|-41.791405|A|McD Macaé|Avenida Aluízio da Silva Gomes, 800, Granja dos Cavaleiros, Macaé - RJ|320|08:00|18:00|40
+-21.765981|-41.330299|M|McD Campos dos Goytacazes|Avenida Vinte e Oito de Março, 574, Centro, Campos dos Goytacazes - RJ|340|08:00|18:00|40
+-22.517964|-44.108139|M|McD Volta Redonda (drive)|Rua Quatorze, 500, Vila Santa Cecília, Volta Redonda - RJ|330|08:00|18:00|40
+-22.466304|-44.451741|S|McD Resende Shopping|Rua Dorival Marcondes de Godoy, 500, Paraíso, Resende - RJ|260|08:00|18:00|40
+-22.458972|-44.439249|M|McD Resende – Via Dutra (drive)|Rodovia Presidente Dutra, Km 305, Paraíso, Resende - RJ|310|08:00|18:00|40
