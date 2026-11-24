@@ -1,9 +1,13 @@
-"""Gera app/static/exemplos.js com os 3 casos de ~50 clientes do Rota Roda.
+"""Gera app/static/exemplos.js com os 4 casos de 50 clientes do Rota Roda.
 
 Os pontos são endereços reais do OpenStreetMap (lojas, bares e residências), coletados
 em 16/11/2026 via Overpass/Photon e guardados em tools/dados_exemplos/*.txt.
 Demandas, janelas de tempo e frota são ilustrativas e geradas de forma reprodutível
 (semente fixa), para cada caso ter o perfil típico da operação.
+
+O caso 4 (McDonald's, 23/11/2026) vem pronto de uma planilha do grupo: endereços das
+lojas, demandas, janelas e atendimento são os dela; as coordenadas foram conferidas no
+OpenStreetMap (ponto da loja via Overpass quando existe, senão o shopping/endereço).
 
     python tools/gerar_exemplos.py
 """
@@ -169,8 +173,40 @@ def bebidas():
     )
 
 
+# --------------------------------------------------------------------------- #
+# Caso 4 — Rede de fast food (McDonald's): abastecimento de 50 lojas no estado do RJ
+# --------------------------------------------------------------------------- #
+def mcdonalds():
+    """Dados da planilha do case (tools/dados_exemplos/mcdonalds.txt): nada aleatório aqui.
+
+    Demandas (caixas), janelas e tempos de atendimento são as premissas da planilha;
+    a frota segue a referência dela (caminhão 3 temperaturas, ~1.000 a 1.200 caixas).
+    """
+    out = []
+    for lat, lng, _orig, name, address, demand, ini, fim, serv in rows("mcdonalds.txt"):
+        p = dict(name=name, address=address, lat=float(lat), lng=float(lng), demand=int(demand))
+        if int(demand) == 0:
+            p["isDepot"] = True
+        else:
+            p.update(service=int(serv), twStart=ini, twEnd=fim)
+        out.append(p)
+    assert sum(not p.get("isDepot") for p in out) == 50
+    return dict(
+        id="mcdonalds", color="#da291c", icon="🍔",
+        title="Fast food · abastecimento de 50 lojas no estado",
+        tag="VRPTW · 50 lojas · estado do RJ",
+        desc="50 lojas McDonald's da capital, Baixada, Niterói/São Gonçalo, Serra, Lagos, Norte e Sul Fluminense, "
+             "saindo de um CD hipotético na CEASA (Irajá). Lojas de rua do centro recebem das 5h às 8h, shoppings "
+             "das 6h às 10h e drive-thrus entre o almoço e o jantar; o interior pede viagens de até 4 horas.",
+        stats=["50 lojas", "caminhão 3 temp. de 1.200 caixas", "janelas por tipo de loja", "atendimento 25–45 min"],
+        points=out,
+        fleet=[dict(name="Caminhão 3 temperaturas", capacity=1200, qty=20, costKm=3.5, fixedCost=450)],
+        opts=dict(useTW=True, dayStart="04:00", dayEnd="23:00", timeLimit=90, returnToDepot=True),
+    )
+
+
 def main():
-    casos = [farmacias(), supermercado(), bebidas()]
+    casos = [farmacias(), supermercado(), bebidas(), mcdonalds()]
     head = ("// Gerado por tools/gerar_exemplos.py — não edite à mão.\n"
             "// Endereços reais do OpenStreetMap (© colaboradores do OpenStreetMap, ODbL);\n"
             "// demandas, janelas de tempo e frota são ilustrativas.\n")
