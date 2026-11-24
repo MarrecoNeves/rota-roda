@@ -35,11 +35,12 @@ O Google Maps é opcional.
 - **Exportação para Excel** (resumo, custos por rota e sequência com horários).
 - **Degradação segura:** se um serviço de mapa cair, o app continua funcionando e a tela informa a fonte usada.
 
-## Exemplos prontos: 3 casos reais com 50 clientes
+## Exemplos prontos: 4 casos reais com 50 clientes
 
-O botão **Exemplos** abre quatro cenários prontos para testar o app (gerados por `tools/gerar_exemplos.py`).
+O botão **Exemplos** abre cinco cenários prontos para testar o app (gerados por `tools/gerar_exemplos.py`).
 Os endereços são reais, tirados do OpenStreetMap em 16/11/2026 (`tools/dados_exemplos/`). Demandas, janelas
-e frota são ilustrativas, escolhidas para cada tipo de operação.
+e frota são ilustrativas, escolhidas para cada tipo de operação. O caso de fast food (23/11/2026) veio de uma
+planilha do grupo, com as premissas dela; as coordenadas foram conferidas no OpenStreetMap.
 
 | Caso | Onde | Clientes | Frota | O que mostra |
 |---|---|---|---|---|
@@ -47,11 +48,14 @@ e frota são ilustrativas, escolhidas para cada tipo de operação.
 | Rede de farmácias (lojas Drogarias Pacheco) | Rio e Niterói, CD hipotético em São Cristóvão | 50 lojas | vans baú de 150 caixas | janelas de recebimento; o Centro recebe até 9h30; travessia da ponte |
 | Supermercado: entregas com hora marcada | Icaraí, Santa Rosa, Ingá (Niterói) | 50 pedidos | utilitários de 22 caixas | janelas de 2 h entre 8h e 20h; C&W fica bem acima do ótimo |
 | Distribuidora de bebidas | Botafogo, Humaitá, Copacabana, Leme | 50 bares e restaurantes | VUC de 150 caixas | janelas de manhã e de tarde, com esperas longas |
+| Fast food: abastecimento de lojas McDonald's | estado do RJ (capital, Baixada, Niterói/SG, Serra, Lagos, Norte e Sul), CD hipotético na CEASA (Irajá) | 50 lojas | caminhão 3 temperaturas de 1.200 caixas | janelas por tipo de loja (rua 5h–8h, shopping 6h–10h, drive-thru 14h–18h, interior 8h–18h); viagens de até 4 h |
 
 No Render (plano grátis, distâncias reais do OSRM), o branch-cut-and-price **provou o ótimo** dos três casos
 em 16/11/2026: farmácias em 33 s (R$ 1.510,24, 7 vans, C&W 0,9% acima), supermercado em 28 s (R$ 687,89,
 8 utilitários; o C&W não achou solução viável com a frota) e bebidas em 60 s (R$ 1.510,05, 8 VUCs, C&W 12,7% acima).
-Cada caso já vem com tempo máximo de 90 s.
+Cada caso já vem com tempo máximo de 90 s. O caso de fast food é o mais leve para o solver, apesar de cobrir o estado
+inteiro: com 13.230 caixas e caminhões de 1.200, cada rota tem só 4 ou 5 lojas, e o ótimo (12 caminhões) sai na raiz em
+poucos segundos.
 Com frota heterogênea, os mesmos 50 clientes ficam bem mais difíceis para o CLP (não fecha a raiz em 90 s),
 por isso os casos usam um tipo de veículo.
 
@@ -144,8 +148,8 @@ app/
   geo.py         OpenStreetMap (Photon, Nominatim, OSRM) e Google, com fallbacks
   static/        index.html, styles.css, app.js, services.js, planilha.js, timeline.js, exemplos.js
                  + vendor/ (Leaflet, SheetJS e QR code locais)
-tests/           29 testes em Python (inclui conferência do ótimo por força bruta) + tests/js (planilhas e linha do tempo)
-tools/           gerar_modelo.py (planilha-modelo) e gerar_exemplos.py (os 3 casos, a partir de dados_exemplos/)
+tests/           35 testes em Python (inclui conferência do ótimo por força bruta e dos exemplos) + tests/js (planilhas e linha do tempo)
+tools/           gerar_modelo.py (planilha-modelo) e gerar_exemplos.py (os 4 casos, a partir de dados_exemplos/)
 Dockerfile, render.yaml, requirements.txt
 ```
 
